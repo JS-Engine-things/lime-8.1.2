@@ -895,6 +895,7 @@ namespace lime {
 		event.type = -1;
 
 		while (SDL_PollEvent (&event)) {
+
 			HandleEvent (&event);
 			event.type = -1;
 			if (!active)
@@ -903,27 +904,25 @@ namespace lime {
 		}
 
 
-		#if (!defined (IPHONE) && !defined (EMSCRIPTEN))
+		#if defined (IPHONE) || defined (EMSCRIPTEN)
 		if (!inBackground) {
 		#endif
 			currentUpdate = SDL_GetPerformanceCounter ();
-			
 	        double deltaTime = (double)(currentUpdate - lastUpdate) / freq;
 		    if (deltaTime < framePeriod) {
-				double waitTime = framePeriod - deltaTime;
-            	Uint64 waitTicks = (Uint64)(waitTime * freq);
+            	Uint64 waitTicks = (Uint64)((framePeriod - deltaTime) * freq);
             	SDL_Delay((waitTicks * 1000) / freq);
             	currentUpdate = SDL_GetPerformanceCounter();
-            	deltaTime += waitTime;
+            	deltaTime = (double)(currentUpdate - lastUpdate) / freq;
         	}
 			lastUpdate = currentUpdate;
 
 			applicationEvent.type = UPDATE;
-			applicationEvent.deltaTime = deltaTime * 1000;
+			applicationEvent.deltaTime = deltaTime;
 
 			ApplicationEvent::Dispatch (&applicationEvent);
 			RenderEvent::Dispatch (&renderEvent);
-		#if (!defined (IPHONE) && !defined (EMSCRIPTEN))
+		#if defined (IPHONE) || defined (EMSCRIPTEN)
 		}
 		#endif
 
