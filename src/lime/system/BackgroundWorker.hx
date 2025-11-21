@@ -130,7 +130,7 @@ class BackgroundWorker
 		// #end
 	}
 
-	@:noCompletion private function __update(deltaTime:Float):Void
+	@:noCompletion private function __update(deltaTime:#if lime_use_old_deltatime Int #else Float #end):Void
 	{
 		#if (cpp || neko)
 		var message = __messageQueue.pop(false);

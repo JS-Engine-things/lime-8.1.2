@@ -168,7 +168,7 @@ class ThreadPool
 		}
 	}
 
-	@:noCompletion private function __update(deltaTime:Float):Void
+	@:noCompletion private function __update(deltaTime:#if lime_use_old_deltatime Int #else Float #end):Void
 	{
 		if (__workQueued > __workCompleted)
 		{
