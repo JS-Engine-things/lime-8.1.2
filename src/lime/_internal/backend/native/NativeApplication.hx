@@ -292,54 +292,7 @@ class NativeApplication
 					window.onKeyUp.dispatch(keyCode, modifier);
 			}
 
-			#if (windows || linux)
-			if (keyCode == RETURN)
-			{
-				if (type == KEY_DOWN)
-				{
-					if (toggleFullscreen && modifier.altKey && (!modifier.ctrlKey && !modifier.shiftKey && !modifier.metaKey))
-					{
-						toggleFullscreen = false;
-
-						if (!window.onKeyDown.canceled)
-						{
-							window.fullscreen = !window.fullscreen;
-						}
-					}
-				}
-				else
-				{
-					toggleFullscreen = true;
-				}
-			}
-
-			#if rpi
-			if (keyCode == ESCAPE && modifier == KeyModifier.NONE && type == KEY_UP && !window.onKeyUp.canceled)
-			{
-				System.exit(0);
-			}
-			#end
-			#elseif mac
-			if (keyCode == F)
-			{
-				if (type == KEY_DOWN)
-				{
-					if (toggleFullscreen && (modifier.ctrlKey && modifier.metaKey) && (!modifier.altKey && !modifier.shiftKey))
-					{
-						toggleFullscreen = false;
-
-						if (!window.onKeyDown.canceled)
-						{
-							window.fullscreen = !window.fullscreen;
-						}
-					}
-				}
-				else
-				{
-					toggleFullscreen = true;
-				}
-			}
-			#elseif android
+			#if android
 			if (keyCode == APP_CONTROL_BACK && modifier == KeyModifier.NONE && type == KEY_UP && !window.onKeyUp.canceled)
 			{
 				var mainActivity = JNI.createStaticField("org/haxe/extension/Extension", "mainActivity", "Landroid/app/Activity;");
