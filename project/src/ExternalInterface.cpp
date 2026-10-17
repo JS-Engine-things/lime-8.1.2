@@ -729,7 +729,11 @@ namespace lime {
 		std::wstring* _filter = hxstring_to_wstring (filter);
 		std::wstring* _defaultPath = hxstring_to_wstring (defaultPath);
 
-		std::wstring* path = FileDialog::OpenDirectory (_title, _filter, _defaultPath);
+		std::wstring* path;
+
+		gc_enter_blocking ();
+		path = FileDialog::OpenDirectory (_title, _filter, _defaultPath);
+		gc_exit_blocking ();
 
 		if (_title) delete _title;
 		if (_filter) delete _filter;
@@ -795,7 +799,11 @@ namespace lime {
 		std::wstring* _filter = hxstring_to_wstring (filter);
 		std::wstring* _defaultPath = hxstring_to_wstring (defaultPath);
 
-		std::wstring* path = FileDialog::OpenFile (_title, _filter, _defaultPath);
+		std::wstring* path;
+
+		gc_enter_blocking ();
+		path = FileDialog::OpenFile (_title, _filter, _defaultPath);
+		gc_exit_blocking ();
 
 		if (_title) delete _title;
 		if (_filter) delete _filter;
@@ -863,7 +871,10 @@ namespace lime {
 
 		std::vector<std::wstring*> files;
 
+		gc_enter_blocking ();
 		FileDialog::OpenFiles (&files, _title, _filter, _defaultPath);
+		gc_exit_blocking ();
+		
 		value result = alloc_array (files.size ());
 
 		if (_title) delete _title;
@@ -930,7 +941,11 @@ namespace lime {
 		std::wstring* _filter = hxstring_to_wstring (filter);
 		std::wstring* _defaultPath = hxstring_to_wstring (defaultPath);
 
-		std::wstring* path = FileDialog::SaveFile (_title, _filter, _defaultPath);
+		std::wstring* path;
+
+		gc_enter_blocking ();
+		path = FileDialog::SaveFile (_title, _filter, _defaultPath);
+		gc_exit_blocking ();
 
 		if (_title) delete _title;
 		if (_filter) delete _filter;
