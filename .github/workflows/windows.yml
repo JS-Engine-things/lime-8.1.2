@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-2025
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
       - name: Setup Haxe
         uses: krdlab/setup-haxe@master
         with:
@@ -33,7 +33,7 @@ jobs:
           haxelib run lime rebuild windows -64 -release -nocolor -nocffi
           haxelib run lime rebuild windows -arm64 -release -nocolor -nocffi -D HXCPP_ARM64
       - name: Upload Artifact (x86)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: Windows-NDLL
           path: |
@@ -42,7 +42,7 @@ jobs:
             lime.png
           if-no-files-found: error
       - name: Upload Artifact (x86_64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: Windows64-NDLL
           path: |
@@ -51,7 +51,7 @@ jobs:
             lime.png
           if-no-files-found: error
       - name: Upload Artifact (ARM64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: WindowsArm64-NDLL
           path: |

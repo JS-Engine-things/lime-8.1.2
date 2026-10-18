@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -45,7 +45,7 @@ jobs:
             lime.png
           if-no-files-found: error
       - name: Upload Artifact (x86_64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: Linux64-NDLL
           path: |
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-22.04-arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v8
       - name: Install system dependencies
         run: |
           sudo add-apt-repository ppa:haxe/releases -y
@@ -76,7 +76,7 @@ jobs:
       - name: Rebuild Lime
         run: haxelib run lime rebuild linux -arm64 -release -nocolor -nocffi -D HXCPP_ARM64
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: LinuxArm64-NDLL
           path: |
