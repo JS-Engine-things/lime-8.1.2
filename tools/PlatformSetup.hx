@@ -1,9 +1,17 @@
-package utils;
+package;
 
 import haxe.Http;
 import haxe.io.Eof;
 import haxe.zip.Reader;
 import hxp.*;
+
+import hxp.Haxelib;
+import hxp.Log;
+import hxp.Path;
+import hxp.StringTools;
+import hxp.System;
+import hxp.Version;
+
 import lime.tools.CLIHelper;
 import lime.tools.ConfigHelper;
 import lime.tools.Platform;
@@ -212,59 +220,6 @@ class PlatformSetup
 		}
 	}
 
-	// public static function getDefines (names:Array<String> = null, descriptions:Array<String> = null, ignored:Array<String> = null):Map<String, String> {
-	// var config = CommandLineTools.getLimeConfig ();
-	// var defines = null;
-	// var env = Sys.environment ();
-	// var path = "";
-	// if (config != null) {
-	// 	defines = config.environment;
-	// 	for (key in defines.keys ()) {
-	// 		if (defines.get (key) == env.get (key)) {
-	// 			defines.remove (key);
-	// 		}
-	// 	}
-	// } else {
-	// 	defines = new Map<String, String> ();
-	// }
-	// if (!defines.exists ("LIME_CONFIG")) {
-	// 	var home = "";
-	// 	if (env.exists ("HOME")) {
-	// 		home = env.get ("HOME");
-	// 	} else if (env.exists ("USERPROFILE")) {
-	// 		home = env.get ("USERPROFILE");
-	// 	} else {
-	// 		Log.println ("Warning : No 'HOME' variable set - ~/.lime/config.xml might be missing.");
-	// 		return null;
-	// 	}
-	// 	defines.set ("LIME_CONFIG", home + "/.lime/config.xml");
-	// }
-	// if (names == null) {
-	// 	return defines;
-	// }
-	// var values = new Array<String> ();
-	// for (i in 0...names.length) {
-	// 	var name = names[i];
-	// 	var description = descriptions[i];
-	// 	var ignore = "";
-	// 	if (ignored != null && ignored.length > i) {
-	// 		ignore = ignored[i];
-	// 	}
-	// 	var value = "";
-	// 	if (defines.exists (name) && defines.get (name) != ignore) {
-	// 		value = defines.get (name);
-	// 	} else if (env.exists (name)) {
-	// 		value = Sys.getEnv (name);
-	// 	}
-	// 	value = unescapePath (CLIHelper.param ("\x1b[1m" + description + "\x1b[0m \x1b[37;3m[" + value + "]\x1b[0m"));
-	// 	if (value != "") {
-	// 		defines.set (name, value);
-	// 	} else if (value == Sys.getEnv (name)) {
-	// 		defines.remove (name);
-	// 	}
-	// }
-	// return defines;
-	// }
 	public static function installHaxelib(haxelib:Haxelib):Void
 	{
 		var name = haxelib.name;
@@ -359,26 +314,6 @@ class PlatformSetup
 
 			switch (target)
 			{
-				case "air":
-					setupAIR();
-
-				case "android":
-					setupAndroid();
-
-				case "blackberry":
-
-				// setupBlackBerry ();
-
-				case "html5":
-					Log.println("\x1b[0;3mNo additional configuration is required.\x1b[0m");
-				// setupHTML5 ();
-
-				case "ios", "iphoneos", "iphonesim":
-					if (System.hostPlatform == MAC)
-					{
-						setupIOS();
-					}
-
 				case "linux":
 					if (System.hostPlatform == LINUX)
 					{
@@ -391,49 +326,19 @@ class PlatformSetup
 						setupMac();
 					}
 
-				case "tizen":
-
-				// setupTizen ();
-
-				case "webassembly", "wasm", "emscripten":
-					setupWebAssembly();
-
-				case "webos":
-
-				// setupWebOS ();
-
-				case "electron":
-					setupElectron();
-
-				case "windows", "winrt":
+				case "windows":
 					if (System.hostPlatform == WINDOWS)
 					{
 						setupWindows();
 					}
 
-				case "neko", "cs", "uwp", "winjs", "nodejs", "java":
-					Log.println("\x1b[0;3mNo additional configuration is required.\x1b[0m");
-
-				case "hl", "hashlink":
-					setupHL();
-
 				case "lime":
 					setupLime();
-
-				case "openfl":
-					setupOpenFL();
-
-				case "tvos", "tvsim":
-					if (System.hostPlatform == MAC)
-					{
-						setupIOS();
-					}
 
 				case "":
 					switch (CommandLineTools.defaultLibrary)
 					{
 						case "lime": setupLime();
-						case "openfl": setupOpenFL();
 						default: setupHaxelib(new Haxelib(CommandLineTools.defaultLibrary));
 					}
 
@@ -572,59 +477,6 @@ class PlatformSetup
 		}
 	}
 
-	public static function setupAIR():Void
-	{
-		Log.println("\x1b[1mIn order to package SWF applications using Adobe AIR, you must");
-		Log.println("download and extract the Adobe AIR SDK.");
-		Log.println("");
-
-		getDefineValue("AIR_SDK", "Path to AIR SDK");
-
-		Log.println("");
-		Log.println("Setup complete.");
-	}
-
-	public static function setupAndroid():Void
-	{
-		Log.println("\x1b[1mIn order to build applications for Android, you must have recent");
-		Log.println("versions of the Android SDK, Android NDK and Java JDK installed.");
-		Log.println("");
-		Log.println("You must also install the Android SDK Platform-tools and API 30 using");
-		Log.println("the SDK manager from Android Studio.\x1b[0m");
-		Log.println("");
-
-		getDefineValue("ANDROID_SDK", "Path to Android SDK");
-		getDefineValue("ANDROID_NDK_ROOT", "Path to Android NDK");
-
-		if (System.hostPlatform != MAC)
-		{
-			getDefineValue("JAVA_HOME", "Path to Java JDK");
-		}
-
-		if (ConfigHelper.getConfigValue("ANDROID_SETUP") == null)
-		{
-			ConfigHelper.writeConfigValue("ANDROID_SETUP", "true");
-		}
-
-		Log.println("");
-		Log.println("Setup complete.");
-	}
-
-	public static function setupElectron():Void
-	{
-		Log.println("\x1b[1mIn order to run Electron applications, you must download");
-		Log.println("and extract the Electron runtime on your system.");
-		Log.println("");
-
-		getDefineValue("ELECTRON_PATH", "Path to Electron runtime");
-
-		Log.println("");
-		Haxelib.runCommand("", ["install", "electron"], true, true);
-
-		Log.println("");
-		Log.println("Setup complete.");
-	}
-
 	public static function setupHaxelib(haxelib:Haxelib, dependency:Bool = false):Void
 	{
 		setupHaxelibs.set(haxelib.name, true);
@@ -663,7 +515,6 @@ class PlatformSetup
 					installHaxelib(lib);
 				}
 				else
-					/*if (userDefines.exists ("upgrade"))*/
 				{
 					updateHaxelib(lib);
 				}
@@ -677,143 +528,30 @@ class PlatformSetup
 		}
 	}
 
-	public static function setupHTML5():Void
-	{
-		// var setApacheCordova = false;
-
-		// var defines = getDefines ();
-		// var answer = CLIHelper.ask ("Download and install Apache Cordova?");
-
-		// if (answer == YES || answer == ALWAYS) {
-
-		// 	var downloadPath = "";
-		// 	var defaultInstallPath = "";
-
-		// 	if (System.hostPlatform == WINDOWS) {
-
-		// 		defaultInstallPath = "C:\\Development\\Apache Cordova";
-
-		// 	} else {
-
-		// 		defaultInstallPath = "/opt/cordova";
-
-		// 	}
-
-		// 	var path = unescapePath (CLIHelper.param ("Output directory [" + defaultInstallPath + "]"));
-		// 	path = createPath (path, defaultInstallPath);
-
-		// 	downloadFile (apacheCordovaPath);
-		// 	extractFile (Path.withoutDirectory (apacheCordovaPath), path, "*");
-
-		// 	var childArchives = [];
-
-		// 	for (file in FileSystem.readDirectory (path)) {
-
-		// 		if (Path.extension (file) == "zip") {
-
-		// 			childArchives.push (file);
-
-		// 		}
-
-		// 	}
-
-		// 	createPath (path + "/lib");
-		// 	var libs = [ "android", "bada-wac", "bada", "blackberry", "ios", "mac", "qt", "tizen", "tvos", "webos", "wp7" ];
-
-		// 	for (archive in childArchives) {
-
-		// 		var name = Path.withoutExtension (archive);
-		// 		name = StringTools.replace (name, "incubator-", "");
-		// 		name = StringTools.replace (name, "cordova-", "");
-
-		// 		if (name == "blackberry-webworks") {
-
-		// 			name = "blackberry";
-
-		// 		}
-
-		// 		var basePath = path + "/";
-
-		// 		for (lib in libs) {
-
-		// 			if (name == lib) {
-
-		// 				basePath += "lib/";
-
-		// 			}
-
-		// 		}
-
-		// 		createPath (basePath + name);
-		// 		extractFile (path + "/" + archive, basePath + name);
-
-		// 	}
-
-		// 	if (System.hostPlatform != WINDOWS) {
-
-		// 		System.runCommand ("", "chmod", [ "-R", "777", path ], false);
-
-		// 	}
-
-		// 	setApacheCordova = true;
-		// 	defines.set ("CORDOVA_PATH", path);
-		// 	writeConfig (defines.get ("LIME_CONFIG"), defines);
-		// 	Log.println ("");
-
-		// }
-
-		// var requiredVariables = [];
-		// var requiredVariableDescriptions = [];
-
-		// if (!setApacheCordova) {
-
-		// 	requiredVariables.push ("CORDOVA_PATH");
-		// 	requiredVariableDescriptions.push ("Path to Apache Cordova");
-
-		// }
-
-		// requiredVariables = requiredVariables.concat ([ "WEBWORKS_SDK", "WEBWORKS_SDK_BBOS", "WEBWORKS_SDK_PLAYBOOK" ]);
-		// requiredVariableDescriptions = requiredVariableDescriptions.concat ([ "Path to WebWorks SDK for BlackBerry 10", "Path to WebWorks SDK for BBOS", "Path to WebWorks SDK for PlayBook" ]);
-
-		// defines = getDefines (requiredVariables, requiredVariableDescriptions);
-
-		// defines.set ("CORDOVA_PATH", unescapePath (defines.get ("CORDOVA_PATH")));
-		// defines.set ("WEBWORKS_SDK_BBOS", unescapePath (defines.get ("WEBWORKS_SDK_BBOS")));
-		// defines.set ("WEBWORKS_SDK_PLAYBOOK", unescapePath (defines.get ("WEBWORKS_SDK_PLAYBOOK")));
-
-		// // temporary hack
-
-		// /*Sys.println ("");
-		// Sys.println ("Setting Apache Cordova install path...");
-		// System.runCommand (defines.get ("CORDOVA_PATH") + "/lib/ios", "make", [ "install" ], true, true);
-		// Sys.println ("Done.");*/
-
-		// writeConfig (defines.get ("LIME_CONFIG"), defines);
-
-		// Haxelib.runCommand ("", [ "install", "cordova" ], true, true);
-	}
-
-	public static function setupIOS():Void
-	{
-		Log.println("\x1b[1mIn order to build applications for iOS and tvOS, you must have");
-		Log.println("Xcode installed. Xcode is available from Apple as a free download.\x1b[0m");
-		Log.println("");
-		Log.println("\x1b[0;3mNo additional configuration is required.\x1b[0m");
-		Log.println("");
-
-		var answer = CLIHelper.ask("Would you like to visit the download page now?");
-
-		if (answer == YES || answer == ALWAYS)
-		{
-			System.openURL(appleXcodeURL);
-		}
-	}
-
 	public static function setupLime():Void
 	{
 		if (!targetFlags.exists("alias") && !targetFlags.exists("cli"))
 		{
 			setupHaxelib(new Haxelib("lime"));
+		}
+
+		if (targetFlags.exists("noalias"))
+		{
+			return;
+		}
+
+		var aliasPath = getAliasExecutable();
+
+		if (aliasPath.length == 0)
+		{
+			Log.warn("For your current system architecture, there no way to rebuild the alias script.");
+			return;
+		}
+
+		if (!FileSystem.exists(aliasPath))
+		{
+			Log.warn("Run `haxelib run lime rebuild alias` in order to rebuild the alias script.");
+			return;
 		}
 
 		var haxePathEnv = Sys.getEnv("HAXEPATH");
@@ -822,6 +560,7 @@ class PlatformSetup
 		if (System.hostPlatform == WINDOWS)
 		{
 			var usingDefaultHaxePath = false;
+
 			if (haxePath == null || haxePath == "")
 			{
 				usingDefaultHaxePath = true;
@@ -829,32 +568,29 @@ class PlatformSetup
 			}
 
 			var copyFailure = false;
-			var exeDestPath = haxePath + "\\lime.exe";
 			try
 			{
-				File.copy(Haxelib.getPath(new Haxelib("lime")) + "\\templates\\\\bin\\lime.exe", exeDestPath);
+				// To remove the old lime behaviour
+
+				var batAlias = Path.join([haxePath, "lime.bat"]);
+
+				if (FileSystem.exists(batAlias))
+				{
+					FileSystem.deleteFile(batAlias);
+				}
+
+				File.copy(aliasPath, Path.join([haxePath, "lime.exe"]));
 			}
 			catch (e:Dynamic)
 			{
 				copyFailure = true;
+
 				if (Log.verbose)
 				{
-					Log.warn("Failed to copy lime.exe alias to destination: " + exeDestPath);
+					Log.warn("Failed to copy lime.exe alias to destination: " + haxePath);
 				}
 			}
-			var shDestPath = haxePath + "\\lime";
-			try
-			{
-				File.copy(Haxelib.getPath(new Haxelib("lime")) + "\\templates\\\\bin\\lime.sh", shDestPath);
-			}
-			catch (e:Dynamic)
-			{
-				copyFailure = true;
-				if (Log.verbose)
-				{
-					Log.warn("Failed to copy lime.sh alias to destination: " + shDestPath);
-				}
-			}
+
 			if (Log.verbose && copyFailure && usingDefaultHaxePath && !FileSystem.exists(haxePath))
 			{
 				Log.warn("Did you install Haxe to a custom location? Set the HAXEPATH environment variable, and run Lime setup again.");
@@ -867,7 +603,6 @@ class PlatformSetup
 				haxePath = "/usr/lib/haxe";
 			}
 
-			var installedCommand = false;
 			var answer = YES;
 
 			if (targetFlags.exists("y"))
@@ -881,62 +616,25 @@ class PlatformSetup
 
 			if (answer == YES || answer == ALWAYS)
 			{
-				if (System.hostPlatform == MAC)
+				// Stupid "System.runCommand" wont work, so we use `haxe` Sys!
+				if (Sys.command("sudo -n true >/dev/null 2>&1") == 0)
 				{
-					var aliasDestPath = "/usr/local/bin/lime";
+					var aliasDestination = "/usr/local/bin/";
+
 					try
 					{
-						System.runCommand("", "cp", [
-							"-f",
-							Haxelib.getPath(new Haxelib("lime")) + "/templates/bin/lime.sh",
-							aliasDestPath
-						], false);
-						System.runCommand("", "chmod", ["755", aliasDestPath], false);
-						installedCommand = true;
+						System.runCommand("", "cp", ["-f", aliasPath, Path.join([aliasDestination, "lime"])], false);
+						System.runCommand("", "chmod", ["755", Path.join([aliasDestination, "lime"])], false);
 					}
 					catch (e:Dynamic)
 					{
-						if (Log.verbose)
-						{
-							Log.warn("Failed to copy Lime alias to destination: " + aliasDestPath);
-						}
+						Log.warn("Failed to copy lime alias to destination: " + aliasDestination);
 					}
 				}
 				else
 				{
-					var aliasDestPath = "/usr/local/bin/lime";
-					try
-					{
-						System.runCommand("", "sudo", [
-							"cp",
-							"-f",
-							Haxelib.getPath(new Haxelib("lime")) + "/templates/bin/lime.sh",
-							aliasDestPath
-						], false);
-						System.runCommand("", "sudo", ["chmod", "755", aliasDestPath], false);
-						installedCommand = true;
-					}
-					catch (e:Dynamic)
-					{
-						if (Log.verbose)
-						{
-							Log.warn("Failed to copy Lime alias to destination: " + aliasDestPath);
-						}
-					}
+					Log.error("You need to run the command with \"sudo\" in order to install the alias! (For example \"sudo haxelib run lime\")");
 				}
-			}
-
-			if (!installedCommand)
-			{
-				Sys.println("");
-				Sys.println("To finish setup, we recommend you either...");
-				Sys.println("");
-				Sys.println(" a) Manually add an alias called \"lime\" to run \"haxelib run lime\"");
-				Sys.println(" b) Run the following commands:");
-				Sys.println("");
-				Sys.println("sudo cp \"" + Path.combine(Haxelib.getPath(new Haxelib("lime")), "templates/bin/lime.sh") + "\" /usr/local/bin/lime");
-				Sys.println("sudo chmod 755 /usr/local/bin/lime");
-				Sys.println("");
 			}
 		}
 
@@ -1067,148 +765,6 @@ class PlatformSetup
 		}
 	}
 
-	public static function setupOpenFL():Void
-	{
-		if (!targetFlags.exists("alias") && !targetFlags.exists("cli"))
-		{
-			setupHaxelib(new Haxelib("openfl"));
-		}
-
-		var haxePath = Sys.getEnv("HAXEPATH");
-		var project = null;
-
-		try
-		{
-			project = HXProject.fromHaxelib(new Haxelib("openfl"));
-		}
-		catch (e:Dynamic) {}
-
-		if (System.hostPlatform == WINDOWS)
-		{
-			if (haxePath == null || haxePath == "")
-			{
-				haxePath = "C:\\HaxeToolkit\\haxe\\";
-			}
-
-			try
-			{
-				File.copy(Haxelib.getPath(new Haxelib("lime")) + "\\templates\\\\bin\\lime.exe", haxePath + "\\lime.exe");
-			}
-			catch (e:Dynamic) {}
-			try
-			{
-				File.copy(Haxelib.getPath(new Haxelib("lime")) + "\\templates\\\\bin\\lime.sh", haxePath + "\\lime");
-			}
-			catch (e:Dynamic) {}
-
-			try
-			{
-				System.copyFileTemplate(project.templatePaths, "bin/openfl.exe", haxePath + "\\openfl.exe");
-				System.copyFileTemplate(project.templatePaths, "bin/openfl.sh", haxePath + "\\openfl");
-			}
-			catch (e:Dynamic) {}
-		}
-		else
-		{
-			if (haxePath == null || haxePath == "")
-			{
-				haxePath = "/usr/lib/haxe";
-			}
-
-			var installedCommand = false;
-			var answer = YES;
-
-			if (targetFlags.exists("y"))
-			{
-				Sys.println("Do you want to install the \"openfl\" command? [y/n/a] y");
-			}
-			else
-			{
-				answer = CLIHelper.ask("Do you want to install the \"openfl\" command?");
-			}
-
-			if (answer == YES || answer == ALWAYS)
-			{
-				if (System.hostPlatform == MAC)
-				{
-					try
-					{
-						System.runCommand("", "cp", [
-							"-f",
-							Haxelib.getPath(new Haxelib("lime")) + "/templates/bin/lime.sh",
-							"/usr/local/bin/lime"
-						], false);
-						System.runCommand("", "chmod", ["755", "/usr/local/bin/lime"], false);
-						System.runCommand("", "cp", [
-							"-f",
-							System.findTemplate(project.templatePaths, "bin/openfl.sh"),
-							"/usr/local/bin/openfl"
-						], false);
-						System.runCommand("", "chmod", ["755", "/usr/local/bin/openfl"], false);
-						installedCommand = true;
-					}
-					catch (e:Dynamic) {}
-				}
-				else
-				{
-					try
-					{
-						System.runCommand("", "sudo", [
-							"cp",
-							"-f",
-							Haxelib.getPath(new Haxelib("lime")) + "/templates/bin/lime.sh",
-							"/usr/local/bin/lime"
-						], false);
-						System.runCommand("", "sudo", ["chmod", "755", "/usr/local/bin/lime"], false);
-						System.runCommand("", "sudo", [
-							"cp",
-							"-f",
-							System.findTemplate(project.templatePaths, "bin/openfl.sh"),
-							"/usr/local/bin/openfl"
-						], false);
-						System.runCommand("", "sudo", ["chmod", "755", "/usr/local/bin/openfl"], false);
-						installedCommand = true;
-					}
-					catch (e:Dynamic) {}
-				}
-			}
-
-			if (!installedCommand)
-			{
-				Sys.println("");
-				Sys.println("To finish setup, we recommend you either...");
-				Sys.println("");
-				Sys.println(" a) Manually add an alias called \"openfl\" to run \"haxelib run openfl\"");
-				Sys.println(" b) Run the following commands:");
-				Sys.println("");
-				Sys.println("sudo cp \"" + Path.combine(Haxelib.getPath(new Haxelib("lime")), "templates/bin/lime.sh") + "\" /usr/local/bin/lime");
-				Sys.println("sudo chmod 755 /usr/local/bin/lime");
-				Sys.println("sudo cp \"" + System.findTemplate(project.templatePaths, "bin/openfl.sh") + "\" /usr/local/bin/openfl");
-				Sys.println("sudo chmod 755 /usr/local/bin/openfl");
-				Sys.println("");
-			}
-		}
-
-		if (System.hostPlatform == MAC)
-		{
-			ConfigHelper.writeConfigValue("MAC_USE_CURRENT_SDK", "1");
-		}
-	}
-
-	public static function setupWebAssembly():Void
-	{
-		Log.println("\x1b[1mIn order to build for WebAssembly or asm.js, you must download");
-		Log.println("and install the Emscripten SDK.");
-		Log.println("");
-		Log.println("After install, the SDK path may be at \"emsdk/upstream/emscripten\"");
-		Log.println("");
-
-		getDefineValue("EMSCRIPTEN_SDK", "Path to Emscripten SDK");
-
-		Log.println("");
-		Log.println("Setup complete.");
-	}
-
 	public static function setupWindows():Void
 	{
 		Log.println("\x1b[1mIn order to build native executables for Windows, you must have a");
@@ -1227,59 +783,35 @@ class PlatformSetup
 		}
 	}
 
-	public static function setupHL():Void
+	private static function getAliasExecutable():String
 	{
-		getDefineValue("HL_PATH", "Path to a custom version of Hashlink. Leave empty to use lime's default version.");
-		if (System.hostPlatform == MAC)
-		{
-			Log.println("To use the hashlink debugger on macOS, the hl executable needs to be signed.");
-			if (ConfigHelper.getConfigValue("HL_PATH") != null)
-			{
-				Log.println("When building HL from source, make sure to have run `make codesign_osx` before installing.");
-			}
-			else
-			{
-				var answer = CLIHelper.ask("Would you like to do this now? (Requires sudo.)");
+		var aliasDirectory:String = Path.combine(Haxelib.getPath(new Haxelib("lime")), "templates/bin/alias/");
 
-				if (answer == YES || answer == ALWAYS)
+		switch (System.hostPlatform)
+		{
+			case WINDOWS:
+				return Path.combine(aliasDirectory, "Windows64/lime.exe");
+			case MAC:
+				if (System.hostArchitecture == X64)
 				{
-					var openSSLConf = System.getTemporaryFile("cnf");
-					var key = System.getTemporaryFile("pem");
-					var cert = System.getTemporaryFile("cer");
-					var limePath = Haxelib.getPath(new Haxelib("lime"));
-					var hlPath = limePath + "/templates/bin/hl/mac/hl";
-					var entitlementsPath = sys.FileSystem.exists(limePath + "/project") ? (limePath +
-						"/project/lib/hashlink/other/osx/entitlements.xml") : (limePath
-						+ "/templates/bin/hl/entitlements.xml");
-					System.runCommand("", "sudo", ["security", "delete-identity", "-c", "hl-cert"], true, true, true);
-					sys.io.File.saveContent(openSSLConf, [
-						"[req]",
-						"distinguished_name=codesign_dn",
-						"[codesign_dn]",
-						"commonName=hl-cert",
-						"[v3_req]",
-						"keyUsage=critical,digitalSignature",
-						"extendedKeyUsage=critical,codeSigning",
-					].join("\n"));
-					System.runCommand("", "openssl", [
-						"req", "-x509", "-newkey", "rsa:4096", "-keyout", key, "-nodes", "-days", "365", "-subj", "/CN=hl-cert", "-outform", "der", "-out",
-						cert, "-extensions", "v3_req", "-config", openSSLConf
-					], true, false, true);
-					System.runCommand("", "sudo", [
-						"security",
-						"add-trusted-cert",
-						"-d",
-						"-k /Library/Keychains/System.keychain",
-						cert
-					], true, false, true);
-					System.runCommand("", "sudo", ["security", "import", key, "-k", "/Library/Keychains/System.keychain", "-A"], true, false, true);
-					System.runCommand("", "codesign", ["--entitlements", entitlementsPath, "-fs", "hl-cert", hlPath], true, false, true);
-					for (f in [key, cert, openSSLConf])
-						sys.FileSystem.deleteFile(f);
-					Log.println("\nIf you update lime, you will have to run this again to sign the new hl executable");
+					return Path.combine(aliasDirectory, "Mac64/lime");
 				}
-			}
+				else if (System.hostArchitecture == ARM64)
+				{
+					return Path.combine(aliasDirectory, "MacArm64/lime");
+				}
+			case LINUX:
+				if (System.hostArchitecture == ARM64)
+				{
+					return Path.combine(aliasDirectory, "LinuxArm64/lime");
+				}
+				else
+				{
+					return Path.combine(aliasDirectory, "Linux64/lime");
+				}
 		}
+
+		return '';
 	}
 
 	private static function throwPermissionsError()

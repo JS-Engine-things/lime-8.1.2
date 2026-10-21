@@ -33,22 +33,14 @@ jobs:
         run: haxelib dev lime ${{ github.workspace }}
       - name: Rebuild Lime
         run: |
-          haxelib run lime rebuild linux -32 -release -nocolor -nocffi
-          haxelib run lime rebuild linux -64 -release -nocolor -nocffi
-      - name: Upload Artifact (x86)
-        uses: actions/upload-artifact@main
-        with:
-          name: Linux-NDLL
-          path: |
-            ndll/Linux/
-            !**/.gitignore
-            lime.png
-          if-no-files-found: error
+          CC=clang-23 CXX=clang++-23 HXCPP_USE_LD="lld-23" haxelib run lime rebuild linux -64 -release -D HXCPP_M64 -D HXCPP_LTO_THIN
+          haxelib run lime rebuild alias
       - name: Upload Artifact (x86_64)
         uses: actions/upload-artifact@main
         with:
           name: Linux64-NDLL
           path: |
+            templates/bin/alias/Linux64/
             ndll/Linux64/
             !**/.gitignore
             lime.png
@@ -74,12 +66,15 @@ jobs:
       - name: Configure Lime
         run: haxelib dev lime ${{ github.workspace }}
       - name: Rebuild Lime
-        run: haxelib run lime rebuild linux -arm64 -release -nocolor -nocffi -D HXCPP_ARM64
+        run: |
+          CC=clang-23 CXX=clang++-23 HXCPP_USE_LD="lld-23" haxelib run lime rebuild linux -arm64 -release -D HXCPP_ARM64 -D HXCPP_LTO_THIN
+          haxelib run lime rebuild alias
       - name: Upload Artifact
         uses: actions/upload-artifact@main
         with:
           name: LinuxArm64-NDLL
           path: |
+            templates/bin/alias/LinuxArm64/
             ndll/LinuxArm64/
             !**/.gitignore
             lime.png
