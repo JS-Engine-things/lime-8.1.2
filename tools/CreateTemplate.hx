@@ -1,4 +1,4 @@
-package utils;
+package;
 
 import hxp.*;
 import lime.tools.HXProject;
@@ -131,12 +131,6 @@ class CreateTemplate
 			{
 				var company = "Company Name";
 
-				/*if (words.length > 2) {
-
-					company = words[2];
-
-				}*/
-
 				var context:Dynamic = {};
 
 				var name = outputName;
@@ -169,20 +163,6 @@ class CreateTemplate
 				var file = StringTools.replace(title, " ", "");
 
 				var id = ["com", "sample", file.toLowerCase()];
-
-				/*if (colonIndex != -1 && words.length > 1 || ) {
-
-					var name = words[1];
-					name = new EReg ("[^a-zA-Z0-9.]", "g").replace (name, "");
-					id = name.split (".");
-
-					if (id.length < 3) {
-
-						id = [ "com", "example" ].concat (id);
-
-					}
-
-				}*/
 
 				var packageName = id.join(".").toLowerCase();
 				var version = "1.0.0";
@@ -248,12 +228,6 @@ class CreateTemplate
 						folder = Path.tryFullPath(words[2]);
 					}
 				}
-
-				/*if (words.length > 2) {
-
-					folder = Path.tryFullPath (words[2]);
-
-				}*/
 
 				System.mkdir(folder);
 				ProjectHelper.recursiveSmartCopyTemplate(project, "project", folder, context);
@@ -389,16 +363,6 @@ class CreateTemplate
 						}
 					}
 				}
-
-				/*templates.push ("extension");
-
-					var projectTemplate = System.findTemplate (project.templatePaths, "project", false);
-
-					if (projectTemplate != null) {
-
-						templates.push ("project");
-
-				}*/
 			}
 		}
 
