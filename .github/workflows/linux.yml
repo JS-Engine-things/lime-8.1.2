@@ -36,7 +36,7 @@ jobs:
           haxelib run lime rebuild linux -32 -release -nocolor -nocffi
           haxelib run lime rebuild linux -64 -release -nocolor -nocffi
       - name: Upload Artifact (x86)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: Linux-NDLL
           path: |
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-22.04-arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v8
+        uses: actions/checkout@main
       - name: Install system dependencies
         run: |
           sudo add-apt-repository ppa:haxe/releases -y
