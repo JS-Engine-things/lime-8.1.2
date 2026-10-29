@@ -832,17 +832,11 @@ class CommandLineTools
 			Log.println("");
 			Log.println(" " + Log.accentColor + "Targets:" + Log.resetColor);
 			Log.println("");
-			Log.println("  \x1b[1mair\x1b[0m -- Create an AIR application");
 			Log.println("  \x1b[1mandroid\x1b[0m -- Create an Android application");
-			// Log.println ("  \x1b[1mblackberry\x1b[0m -- Create a BlackBerry application");
-			Log.println("  \x1b[1mflash\x1b[0m -- Create a Flash SWF application");
 			Log.println("  \x1b[1mhtml5\x1b[0m -- Create an HTML5 application");
 			Log.println("  \x1b[1mios\x1b[0m -- Create an iOS application");
 			Log.println("  \x1b[1mlinux\x1b[0m -- Create a Linux application");
 			Log.println("  \x1b[1mmac\x1b[0m -- Create a macOS application");
-			// Log.println ("  \x1b[1mtizen\x1b[0m -- Create a Tizen application");
-			Log.println("  \x1b[1mtvos\x1b[0m -- Create a tvOS application");
-			// Log.println ("  \x1b[1mwebos\x1b[0m -- Create a webOS application");
 			Log.println("  \x1b[1mwebassembly\x1b[0m -- Create a WebAssembly application");
 			Log.println("  \x1b[1mwindows\x1b[0m -- Create a Windows application");
 
@@ -852,20 +846,8 @@ class CommandLineTools
 			Log.println("  \x1b[1mcpp\x1b[0m -- Alias for host platform (using \x1b[1m-cpp\x1b[0m)");
 			Log.println("  \x1b[1mneko\x1b[0m -- Alias for host platform (using \x1b[1m-neko\x1b[0m)");
 			Log.println("  \x1b[1mmacos\x1b[0m -- Alias for \x1b[1mmac\x1b[0m");
-			Log.println("  \x1b[1mnodejs\x1b[0m -- Alias for host platform (using \x1b[1m-nodejs\x1b[0m)");
-			Log.println("  \x1b[1mjava\x1b[0m -- Alias for host platform (using \x1b[1m-java\x1b[0m)");
-			Log.println("  \x1b[1mcs\x1b[0m -- Alias for host platform (using \x1b[1m-cs\x1b[0m)");
 			Log.println("  \x1b[1mhl/hashlink\x1b[0m -- Alias for host platform (using \x1b[1m-hl\x1b[0m)");
-			#if (lime >= "7.6.0")
-			// Log.println("  \x1b[1mcppia\x1b[0m -- Alias for host platform (using \x1b[1m-cppia\x1b[0m)");
-			#end
-			Log.println("  \x1b[1muwp\x1b[0;3m/\x1b[0m\x1b[1mwinjs\x1b[0m -- Alias for \x1b[1mwindows -uwp\x1b[0m");
-			// Log.println ("  \x1b[1miphone\x1b[0;3m/\x1b[0m\x1b[1miphoneos\x1b[0m -- \x1b[1mios\x1b[0m");
-			// Log.println ("  \x1b[1miphonesim\x1b[0m -- Alias for \x1b[1mios -simulator\x1b[0m");
-			// Log.println ("  \x1b[1mappletv\x1b[0;3m/\x1b[0m\x1b[1mappletvos\x1b[0m -- Alias for \x1b[1mtvos\x1b[0m");
-			// Log.println ("  \x1b[1mappletvsim\x1b[0m -- Alias for \x1b[1mtvos -simulator\x1b[0m");
 			Log.println("  \x1b[1mrpi\x1b[0;3m/\x1b[0m\x1b[1mraspberrypi\x1b[0m -- Alias for \x1b[1mlinux -rpi\x1b[0m");
-			Log.println("  \x1b[1melectron\x1b[0m -- Alias for \x1b[1mhtml5 -electron\x1b[0m");
 			Log.println("  \x1b[1mwasm/emscripten\x1b[0m -- Alias for \x1b[1mwebassembly\x1b[0m");
 		}
 
@@ -936,7 +918,6 @@ class CommandLineTools
 				Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-xcode\x1b[0m -- Launch the generated Xcode project");
 			}
 
-			// Log.println ("  \x1b[3m(ios|blackberry|tizen|tvos|webos)\x1b[0m \x1b[1m-simulator\x1b[0m -- Target the device simulator");
 			Log.println("  \x1b[3m(ios|tvos)\x1b[0m \x1b[1m-simulator\x1b[0m -- Target the device simulator");
 			Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-simulator -ipad\x1b[0m -- Build/test for the iPad Simulator");
 			Log.println("  \x1b[3m(android)\x1b[0m \x1b[1m-emulator\x1b[0m -- Target the device emulator");
@@ -963,16 +944,7 @@ class CommandLineTools
 			Log.println("");
 			Log.println("  \x1b[1m-watch\x1b[0m -- Execute the current command when the source changes");
 			Log.println("  \x1b[3m(linux)\x1b[0m \x1b[1m-rpi\x1b[0m -- Build for Raspberry Pi");
-			Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-java\x1b[0m -- Build for Java instead of C++");
-			Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-nodejs\x1b[0m -- Build for Node.js instead of C++");
-			Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-cs\x1b[0m -- Build for C# instead of C++");
 			Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-hl\x1b[0m -- Build for HashLink instead of C++");
-			#if (lime >= "7.6.0")
-			// Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-cppia\x1b[0m -- Build for CPPIA instead of C++");
-			#end
-			Log.println("  \x1b[3m(windows)\x1b[0m \x1b[1m-winjs\x1b[0m -- Build for WinJS instead of C++ (implies UWP)");
-			Log.println("  \x1b[3m(windows)\x1b[0m \x1b[1m-uwp\x1b[0m -- Build for Universal Windows Platform");
-			Log.println("  \x1b[3m(html5)\x1b[0m \x1b[1m-electron\x1b[0m -- Target Electron instead of the browser");
 
 			if (command != "run" && command != "trace")
 			{
@@ -1443,14 +1415,6 @@ class CommandLineTools
 				target = cast System.hostPlatform;
 				targetFlags.set("cppia", "");
 
-			case "java":
-				target = cast System.hostPlatform;
-				targetFlags.set("java", "");
-
-			case "nodejs":
-				target = cast System.hostPlatform;
-				targetFlags.set("nodejs", "");
-
 			case "cs":
 				target = cast System.hostPlatform;
 				targetFlags.set("cs", "");
@@ -1461,14 +1425,6 @@ class CommandLineTools
 			case "iphonesim":
 				target = Platform.IOS;
 				targetFlags.set("simulator", "");
-
-			case "electron":
-				target = Platform.HTML5;
-				targetFlags.set("electron", "");
-
-			case "firefox", "firefoxos":
-				target = Platform.FIREFOX;
-				overrides.haxedefs.set("firefoxos", "");
 
 			case "mac", "macos":
 				target = Platform.MAC;
@@ -1481,15 +1437,6 @@ class CommandLineTools
 			case "webassembly", "wasm", "emscripten":
 				target = Platform.WEB_ASSEMBLY;
 				targetFlags.set("webassembly", "");
-
-			case "winjs", "uwp":
-				target = Platform.WINDOWS;
-				targetFlags.set("uwp", "");
-				targetFlags.set("winjs", "");
-
-			case "winrt":
-				target = Platform.WINDOWS;
-				targetFlags.set("winrt", "");
 
 			default:
 				target = cast targetName.toLowerCase();
