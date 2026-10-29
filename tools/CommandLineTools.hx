@@ -1,8 +1,5 @@
 package;
 
-// import openfl.text.Font;
-// import openfl.utils.ByteArray;
-// import openfl.utils.CompressionAlgorithm;
 import haxe.Serializer;
 import haxe.Unserializer;
 import haxe.rtti.Meta;
@@ -104,9 +101,6 @@ class CommandLineTools
 
 			case "generate":
 				generate();
-
-			case "compress":
-				compress();
 
 			case "create":
 				createTemplate();
@@ -234,10 +228,6 @@ class CommandLineTools
 							target = cast System.hostPlatform;
 							targetFlags.set("cpp", "");
 
-						case "neko":
-							target = cast System.hostPlatform;
-							targetFlags.set("neko", "");
-
 						case "hl", "hashlink":
 							target = cast System.hostPlatform;
 							targetFlags.set("hl", "");
@@ -245,18 +235,6 @@ class CommandLineTools
 						case "cppia":
 							target = cast System.hostPlatform;
 							targetFlags.set("cppia", "");
-
-						case "java":
-							target = cast System.hostPlatform;
-							targetFlags.set("java", "");
-
-						case "nodejs":
-							target = cast System.hostPlatform;
-							targetFlags.set("nodejs", "");
-
-						case "cs":
-							target = cast System.hostPlatform;
-							targetFlags.set("cs", "");
 
 						case "iphone", "iphoneos":
 							target = Platform.IOS;
@@ -268,17 +246,6 @@ class CommandLineTools
 						case "electron":
 							target = Platform.HTML5;
 							targetFlags.set("electron", "");
-
-						case "firefox", "firefoxos":
-							target = Platform.FIREFOX;
-							overrides.haxedefs.set("firefoxos", "");
-
-						case "appletv", "appletvos":
-							target = Platform.TVOS;
-
-						case "appletvsim":
-							target = Platform.TVOS;
-							targetFlags.set("simulator", "");
 
 						case "mac", "macos":
 							target = Platform.MAC;
@@ -470,19 +437,7 @@ class CommandLineTools
 		switch (System.hostPlatform)
 		{
 			case WINDOWS:
-				// var is64 = neko.Lib.load("std", "sys_is64", 0)();
-				untyped $loader.path = $array(path + "Windows/", $loader.path);
-				if (CFFI.enabled)
-				{
-					try
-					{
-						neko.Lib.load("lime", "lime_application_create", 0);
-					}
-					catch (e:Dynamic)
-					{
-						untyped $loader.path = $array(path + "Windows64/", $loader.path);
-					}
-				}
+				untyped $loader.path = $array(path + "Windows64/", $loader.path);
 
 			case MAC:
 			if (System.hostArchitecture == X64) {
@@ -586,20 +541,8 @@ class CommandLineTools
 				case ANDROID:
 					platform = new AndroidPlatform(command, project, targetFlags);
 
-				case BLACKBERRY:
-
-				// platform = new BlackBerryPlatform (command, project, targetFlags);
-
 				case IOS:
 					platform = new IOSPlatform(command, project, targetFlags);
-
-				case TIZEN:
-
-				// platform = new TizenPlatform (command, project, targetFlags);
-
-				case WEBOS:
-
-				// platform = new WebOSPlatform (command, project, targetFlags);
 
 				case WINDOWS:
 					platform = new WindowsPlatform(command, project, targetFlags);
@@ -616,18 +559,8 @@ class CommandLineTools
 				case HTML5:
 					platform = new HTML5Platform(command, project, targetFlags);
 
-				// case FIREFOX:
-
-				// 	platform = new FirefoxPlatform (command, project, targetFlags);
-
 				case WEB_ASSEMBLY:
 					platform = new WebAssemblyPlatform(command, project, targetFlags);
-
-				case TVOS:
-					platform = new TVOSPlatform(command, project, targetFlags);
-
-				case AIR:
-					platform = new AIRPlatform(command, project, targetFlags);
 
 				default:
 			}
@@ -641,18 +574,6 @@ class CommandLineTools
 			{
 				Log.error("\"" + Std.string(project.target) + "\" is an unknown target");
 			}
-		}
-	}
-
-	private function compress()
-	{
-		if (words.length > 0)
-		{
-			// var bytes = new ByteArray ();
-			// bytes.writeUTFBytes (words[0]);
-			// bytes.compress (CompressionAlgorithm.LZMA);
-			// Sys.print (bytes.toString ());
-			// File.saveBytes (words[0] + ".compress", bytes);
 		}
 	}
 
@@ -1034,8 +955,6 @@ class CommandLineTools
 			if (command == "run" || command == "test")
 			{
 				Log.println("  \x1b[3m(html5|flash|webassembly)\x1b[0m \x1b[1m-nolaunch\x1b[0m -- Begin test server without launching");
-				// Log.println ("  \x1b[3m(html5)\x1b[0m \x1b[1m-minify\x1b[0m -- Minify output using the Google Closure compiler");
-				// Log.println ("  \x1b[3m(html5)\x1b[0m \x1b[1m-minify -yui\x1b[0m -- Minify output using the YUI compressor");
 				Log.println("  \x1b[3m(html5|flash|webassembly)\x1b[0m \x1b[1m--port=\x1b[0;3mvalue\x1b[0m -- Set port for test server");
 			}
 

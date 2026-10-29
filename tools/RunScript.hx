@@ -1,100 +1,110 @@
 package;
 
-import hxp.*;
-import sys.io.File;
-import sys.io.Process;
+import hxp.Haxelib;
+import hxp.HostArchitecture;
+import hxp.Log;
+import hxp.Path;
+import hxp.System;
+
 import sys.FileSystem;
+import sys.io.File;
 
 class RunScript
 {
-	private static function rebuildTools(rebuildBinaries = true):Void
+	private static function rebuildTools(limeDirectory:String, toolsDirectory:String):Void
 	{
-		var limeDirectory = Haxelib.getPath(new Haxelib("lime"), true);
-		var toolsDirectory = Path.combine(limeDirectory, "tools");
+		System.runCommand(limeDirectory, "haxe", ["run.hxml"]);
+		System.runCommand(toolsDirectory, "haxe", ["tools.hxml"]);
+	}
 
-		if (!FileSystem.exists(toolsDirectory))
+	private static function rebuildAlias(limeDirectory:String, aliasDirectory:String, args:Array<String>):Void
+	{
+		// Defaults to the host architecture; -32, -64, -arm64 or -armv7 cross-builds like `lime rebuild <platform>`.
+		var architecture:HostArchitecture = System.hostArchitecture;
+
+		if (args.indexOf("-32") > -1)
 		{
-			toolsDirectory = Path.combine(limeDirectory, "../tools");
+			architecture = X86;
+		}
+		else if (args.indexOf("-64") > -1)
+		{
+			architecture = X64;
+		}
+		else if (args.indexOf("-arm64") > -1)
+		{
+			architecture = ARM64;
+		}
+		else if (args.indexOf("-armv7") > -1)
+		{
+			architecture = ARMV7;
 		}
 
-		/*var extendedToolsDirectory = Haxelib.getPath (new Haxelib ("lime-extended"), false);
+		var aliasTargetDirectory:String = Path.combine(limeDirectory, "templates/bin/alias/");
 
-			if (extendedToolsDirectory != null && extendedToolsDirectory != "") {
+		System.makeDirectory(aliasTargetDirectory);
 
-				var buildScript = File.getContent (Path.combine (extendedToolsDirectory, "tools.hxml"));
-				buildScript = StringTools.replace (buildScript, "\r\n", "\n");
-				buildScript = StringTools.replace (buildScript, "\n", " ");
-
-				System.runCommand (toolsDirectory, "haxe", buildScript.split (" "));
-
-		} else {*/
-
-		System.runCommand(toolsDirectory, "haxe", ["tools.hxml"]);
-
-		// }
-
-		if (!rebuildBinaries) return;
-
-		var platforms = ["Windows", "Mac", "Mac64", "MacArm64", "Linux", "Linux64"];
-
-		for (platform in platforms)
+		function rebuildAliasExecutable(directoryName:String, architectureDefine:String, ?executableExtension:String):Void
 		{
-			var source = Path.combine(limeDirectory, "ndll/" + platform + "/lime.ndll");
-			// var target = Path.combine (toolsDirectory, "ndll/" + platform + "/lime.ndll");
+			var aliasTargetOutputDirectory:String = Path.combine(aliasTargetDirectory, directoryName);
 
-			if (!FileSystem.exists(source))
+			System.makeDirectory(aliasTargetOutputDirectory);
+
+			var aliasTargetOutputFile:String = Path.combine(aliasTargetOutputDirectory, haxe.io.Path.withExtension('lime', executableExtension));
+
+			// Always clean rebuild it!
+			System.removeDirectory(Path.combine(aliasDirectory, 'obj'));
+
+			// -Dno-compilation so its doesnt print the command itself, stupid haxe
+			System.runCommand(aliasDirectory, "haxe", ["alias.hxml", "-D", architectureDefine, '-D', 'no-compilation']);
+
+			// We need to run this manually now!
+			System.runCommand(Path.combine(aliasDirectory, 'obj'), 'haxelib', ['run', 'hxcpp', 'Build.xml', '-options', 'Options.txt']);
+
+			var aliasOutput:String = Path.combine(aliasDirectory, haxe.io.Path.withExtension("obj/Alias", executableExtension));
+
+			if (FileSystem.exists(aliasOutput))
 			{
-				var args = ["tools/tools.n", "rebuild", "lime", "-release", "-nocffi"];
-
-				if (Log.verbose)
-				{
-					args.push("-verbose");
-				}
-
-				if (!Log.enableColor)
-				{
-					args.push("-nocolor");
-				}
-
-				switch (platform)
-				{
-					case "Windows":
-						if (System.hostPlatform == WINDOWS)
-						{
-							System.runCommand(limeDirectory, "neko", args.concat(["windows", toolsDirectory]));
-						}
-
-					case "Mac", "Mac64", "MacArm64":
-						if (System.hostPlatform == MAC)
-						{
-							System.runCommand(limeDirectory, "neko", args.concat(["mac", toolsDirectory]));
-						}
-
-					case "Linux":
-						if (System.hostPlatform == LINUX && System.hostArchitecture != X64)
-						{
-							System.runCommand(limeDirectory, "neko", args.concat(["linux", "-32", toolsDirectory]));
-						}
-
-					case "Linux64":
-						if (System.hostPlatform == LINUX && System.hostArchitecture == X64)
-						{
-							System.runCommand(limeDirectory, "neko", args.concat(["linux", "-64", toolsDirectory]));
-						}
-				}
+				System.copyFile(Path.combine(aliasDirectory, haxe.io.Path.withExtension("obj/Alias", executableExtension)), aliasTargetOutputFile);
 			}
+		}
 
-			if (!FileSystem.exists(source))
-			{
-				if (Log.verbose)
+		switch (System.hostPlatform)
+		{
+			case WINDOWS:
+				if (architecture == X64)
 				{
-					Log.warn("", "Source path \"" + source + "\" does not exist");
+					rebuildAliasExecutable('Windows64', 'HXCPP_M64', 'exe');
 				}
-			}
-			else
-			{
-				// System.copyIfNewer (source, target);
-			}
+				else if (architecture == ARM64)
+				{
+					rebuildAliasExecutable('WindowsArm64', 'HXCPP_ARM64', 'exe');
+				}
+			case MAC:
+				if (architecture == X64)
+				{
+					rebuildAliasExecutable('Mac64', 'HXCPP_M64');
+				}
+				else if (architecture == ARM64)
+				{
+					rebuildAliasExecutable('MacArm64', 'HXCPP_ARM64');
+				}
+			case LINUX:
+				if (architecture == ARMV7)
+				{
+					rebuildAliasExecutable('LinuxArm', 'HXCPP_ARMV7');
+				}
+				else if (architecture == ARM64)
+				{
+					rebuildAliasExecutable('LinuxArm64', 'HXCPP_ARM64');
+				}
+				else if (architecture == X64)
+				{
+					rebuildAliasExecutable('Linux64', 'HXCPP_M64');
+				}
+				else if (architecture == X86)
+				{
+					rebuildAliasExecutable('Linux', 'HXCPP_M32');
+				}
 		}
 	}
 
@@ -116,7 +126,7 @@ class RunScript
 			}
 		}
 
-		var result:Dynamic = Sys.command(command, args);
+		final result:Int = Sys.command(command, args);
 
 		if (oldPath != "")
 		{
@@ -133,12 +143,11 @@ class RunScript
 
 	public static function main()
 	{
-		var args = Sys.args();
+		final args:Array<String> = Sys.args();
 
-		if (args.length > 2 && args[0] == "rebuild" && args[1] == "tools")
+		if (args.length > 0)
 		{
-			var lastArgument = new Path(args[args.length - 1]).toString();
-			var cacheDirectory = Sys.getCwd();
+			var lastArgument:String = new Path(args[args.length - 1]).toString();
 
 			if (((StringTools.endsWith(lastArgument, "/") && lastArgument != "/") || StringTools.endsWith(lastArgument, "\\"))
 				&& !StringTools.endsWith(lastArgument, ":\\"))
@@ -148,25 +157,37 @@ class RunScript
 
 			if (FileSystem.exists(lastArgument) && FileSystem.isDirectory(lastArgument))
 			{
-				Sys.setCwd(lastArgument);
+				Haxelib.workingDirectory = lastArgument;
 			}
+		}
 
-			Haxelib.workingDirectory = Sys.getCwd();
-			var rebuildBinaries = true;
+		var limeDirectory:String = Haxelib.getPath(new Haxelib("lime"), true);
+		var toolsDirectory:String = Path.combine(limeDirectory, "tools");
+
+		if (!FileSystem.exists(toolsDirectory))
+		{
+			limeDirectory = Path.combine(limeDirectory, "..");
+			toolsDirectory = Path.combine(limeDirectory, "tools");
+		}
+
+		if (args.length > 2 && args[0] == "rebuild" && (args[1] == "tools" || args[1] == "alias"))
+		{
+			final cacheDirectory:String = Sys.getCwd();
+
+			Sys.setCwd(Haxelib.workingDirectory);
 
 			for (arg in args)
 			{
-				var equals = arg.indexOf("=");
+				final equals:Int = arg.indexOf("=");
 
 				if (equals > -1 && StringTools.startsWith(arg, "--"))
 				{
-					var argValue = arg.substr(equals + 1);
-					var field = arg.substr(2, equals - 2);
+					final argValue:String = arg.substr(equals + 1);
+					final field:String = arg.substr(2, equals - 2);
 
 					if (StringTools.startsWith(field, "haxelib-"))
 					{
-						var name = field.substr(8);
-						Haxelib.pathOverrides.set(name, Path.tryFullPath(argValue));
+						Haxelib.pathOverrides.set(field.substr(8), Path.tryFullPath(argValue));
 					}
 				}
 				else if (StringTools.startsWith(arg, "-"))
@@ -179,15 +200,19 @@ class RunScript
 						case "-nocolor":
 							Log.enableColor = false;
 
-						case "-nocffi":
-							rebuildBinaries = false;
-
 						default:
 					}
 				}
 			}
 
-			rebuildTools(rebuildBinaries);
+			if (args[1] == "alias")
+			{
+				rebuildAlias(limeDirectory, Path.combine(toolsDirectory, 'alias'), args);
+			}
+			else
+			{
+				rebuildTools(limeDirectory, toolsDirectory);
+			}
 
 			if (args.indexOf("-openfl") > -1)
 			{
@@ -199,29 +224,13 @@ class RunScript
 			}
 		}
 
-		if (args.indexOf("-eval") >= 0)
-		{
-			args.remove("-eval");
-			Log.info("Experimental: executing `lime " + args.slice(0, args.length - 1).join(" ")
-				+ "` using Eval (https://haxe.org/blog/eval/)");
+		final tools_n:String = Path.combine(toolsDirectory, "tools.n");
 
-			var args = [
-				"-D", "lime",
-				"-cp", "tools",
-				"-cp", "tools/platforms",
-				"-cp", "src",
-				"-lib", "format",
-				"-lib", "hxp",
-				"--run", "CommandLineTools"].concat(args);
-			Sys.exit(runCommand("", "haxe", args));
+		if (!FileSystem.exists(tools_n) || args.indexOf("-rebuild") > -1)
+		{
+			rebuildTools(limeDirectory, toolsDirectory);
 		}
 
-		if (!FileSystem.exists("tools/tools.n") || args.indexOf("-rebuild") > -1)
-		{
-			rebuildTools();
-		}
-
-		var args = ["tools/tools.n"].concat(args);
-		Sys.exit(runCommand("", "neko", args));
+		Sys.exit(runCommand("", "neko", [tools_n].concat(args)));
 	}
 }
