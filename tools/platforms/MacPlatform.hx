@@ -1,6 +1,5 @@
 package;
 
-import lime.tools.HashlinkHelper;
 import hxp.Haxelib;
 import hxp.HXML;
 import hxp.Log;
@@ -11,15 +10,11 @@ import lime.tools.Architecture;
 import lime.tools.AssetHelper;
 import lime.tools.AssetType;
 import lime.tools.CPPHelper;
-import lime.tools.CSHelper;
 import lime.tools.DeploymentHelper;
 import lime.tools.GUID;
 import lime.tools.HXProject;
 import lime.tools.Icon;
 import lime.tools.IconHelper;
-import lime.tools.JavaHelper;
-import lime.tools.NekoHelper;
-import lime.tools.NodeJSHelper;
 import lime.tools.Orientation;
 import lime.tools.Platform;
 import lime.tools.PlatformTarget;
