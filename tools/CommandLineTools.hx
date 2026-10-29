@@ -96,19 +96,13 @@ class CommandLineTools
 			case "setup":
 				platformSetup();
 
-			case "document":
-				document();
-
-			case "generate":
-				generate();
-
 			case "create":
 				createTemplate();
 
 			case "install", "remove", "upgrade":
 				updateLibrary();
 
-			case "clean", "update", "display", "build", "run", "rerun", /*"install",*/ "uninstall", "trace", "test", "deploy":
+			case "clean", "update", "display", "build", "run", "rerun", "uninstall", "trace", "test", "deploy":
 				if (words.length < 1 || words.length > 2)
 				{
 					Log.error("Incorrect number of arguments for command '" + command + "'");
@@ -533,9 +527,6 @@ class CommandLineTools
 				case LINUX:
 					platform = new LinuxPlatform(command, project, targetFlags);
 
-				case HTML5:
-					platform = new HTML5Platform(command, project, targetFlags);
-
 				default:
 			}
 
@@ -807,7 +798,6 @@ class CommandLineTools
 			Log.println(" " + Log.accentColor + "Targets:" + Log.resetColor);
 			Log.println("");
 			Log.println("  \x1b[1mandroid\x1b[0m -- Create an Android application");
-			Log.println("  \x1b[1mhtml5\x1b[0m -- Create an HTML5 application");
 			Log.println("  \x1b[1mios\x1b[0m -- Create an iOS application");
 			Log.println("  \x1b[1mlinux\x1b[0m -- Create a Linux application");
 			Log.println("  \x1b[1mmac\x1b[0m -- Create a macOS application");
@@ -886,17 +876,9 @@ class CommandLineTools
 			{
 				Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-xcode\x1b[0m -- Launch the generated Xcode project");
 			}
-
-			Log.println("  \x1b[3m(ios|tvos)\x1b[0m \x1b[1m-simulator\x1b[0m -- Target the device simulator");
+			Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-simulator\x1b[0m -- Target the device simulator");
 			Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-simulator -ipad\x1b[0m -- Build/test for the iPad Simulator");
 			Log.println("  \x1b[3m(android)\x1b[0m \x1b[1m-emulator\x1b[0m -- Target the device emulator");
-			Log.println("  \x1b[3m(html5)\x1b[0m \x1b[1m-npm\x1b[0m -- Target HTML5 using an NPM project structure");
-
-			if (command == "run" || command == "test")
-			{
-				Log.println("  \x1b[3m(html5)\x1b[0m \x1b[1m-nolaunch\x1b[0m -- Begin test server without launching");
-				Log.println("  \x1b[3m(html5)\x1b[0m \x1b[1m--port=\x1b[0;3mvalue\x1b[0m -- Set port for test server");
-			}
 
 			Log.println("");
 			Log.println(" " + Log.accentColor + "Experimental Options:" + Log.resetColor);
@@ -985,8 +967,6 @@ class CommandLineTools
 		}
 	}
 
-	private function document():Void {}
-
 	private function findProjectFile(path:String):String
 	{
 		if (FileSystem.exists(Path.combine(path, "project.hxp")))
@@ -1054,40 +1034,6 @@ class CommandLineTools
 		}
 
 		return "";
-	}
-
-	private function generate():Void
-	{
-		if (targetFlags.exists("font-hash"))
-		{
-			var sourcePath = words[0];
-			var glyphs = "32-255";
-
-			System.runCommand(Path.directory(sourcePath), "neko", [
-				Haxelib.getPath(new Haxelib("lime")) + "/templates/bin/hxswfml.n",
-				"ttf2hash2",
-				Path.withoutDirectory(sourcePath),
-				Path.withoutDirectory(sourcePath) + ".hash",
-				"-glyphs",
-				glyphs
-			]);
-		}
-		else if (targetFlags.exists("font-details"))
-		{
-			// var sourcePath = words[0];
-
-			// var details = Font.load (sourcePath);
-			// var json = Json.stringify (details);
-			// Sys.print (json);
-		}
-		else if (targetFlags.exists("java-externs"))
-		{
-			var config = ConfigHelper.getConfig();
-			var sourcePath = words[0];
-			var targetPath = words[1];
-
-			new JavaExternGenerator(config, sourcePath, targetPath);
-		}
 	}
 
 	private function getBuildNumber(project:HXProject, increment:Bool = true):Void

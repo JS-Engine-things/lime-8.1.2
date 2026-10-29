@@ -132,9 +132,6 @@ class HXProject extends Script
 
 		platformType = switch (target)
 		{
-			case HTML5:
-				PlatformType.WEB;
-
 			case ANDROID, IOS:
 				PlatformType.MOBILE;
 
@@ -676,10 +673,6 @@ class HXProject extends Script
 				defines.set("platformType", "desktop");
 				defines.set("desktop", "1");
 
-			case WEB:
-				defines.set("platformType", "web");
-				defines.set("web", "1");
-
 			case CONSOLE:
 				defines.set("platformType", "console");
 				defines.set("console", "1");
@@ -695,8 +688,7 @@ class HXProject extends Script
 				defines.set("mingw", "1");
 			}
 		}
-		else if (targetFlags.exists("cpp")
-			|| ((platformType != PlatformType.WEB) && !targetFlags.exists("html5")))
+		else if (targetFlags.exists("cpp"))
 		{
 			defines.set("targetType", "cpp");
 			defines.set("native", "1");
@@ -1052,15 +1044,9 @@ class HXProject extends Script
 				ObjectTools.copyFields(asset, embeddedAsset);
 
 				embeddedAsset.sourcePath = Path.standardize(asset.sourcePath);
-
-				if (asset.embed == null)
-				{
-					embeddedAsset.embed = (platformType == PlatformType.WEB || target == AIR);
-				}
-
 				embeddedAsset.type = Std.string(asset.type).toLowerCase();
 
-				#if (lime && lime_cffi && !macro)
+				#if (lime_cffi && !macro)
 				if (asset.type == FONT)
 				{
 					try
@@ -1110,9 +1096,6 @@ class HXProject extends Script
 			templateNDLL.nameSafe = StringTools.replace(ndll.name, "-", "_");
 			context.ndlls.push(templateNDLL);
 		}
-
-		// Reflect.setField (context, "ndlls", ndlls);
-		// Reflect.setField (context, "sslCaCert", sslCaCert);
 		context.sslCaCert = "";
 
 		var compilerFlags = [];
@@ -1129,8 +1112,6 @@ class HXProject extends Script
 			{
 				name += ":" + version;
 			}
-
-			// #if lime
 
 			if (Haxelib.pathOverrides.exists(name))
 			{
@@ -1213,17 +1194,6 @@ class HXProject extends Script
 								{
 									compilerFlags = ArrayTools.concatUnique(compilerFlags, ["-D " + name], true);
 								}
-
-								/*var haxelib = new Haxelib (arg.substr (3));
-									var path = Haxelib.getPath (haxelib);
-									var version = getHaxelibVersion (haxelib);
-
-									if (path != null) {
-
-										CompatibilityHelper.patchProject (this, haxelib, version);
-										compilerFlags = ArrayTools.concatUnique (compilerFlags, [ "-D " + haxelib.name + "=" + version ], true);
-
-								}*/
 							}
 							else if (!StringTools.startsWith(arg, "-L"))
 							{
@@ -1233,12 +1203,6 @@ class HXProject extends Script
 					}
 				}
 			}
-
-			// #else
-
-			// compilerFlags.push ("-lib " + name);
-
-			// #end
 
 			Reflect.setField(context, "LIB_" + StringTools.formatUppercaseVariable(haxelib.name), true);
 
