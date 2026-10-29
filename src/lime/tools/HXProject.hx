@@ -11,12 +11,8 @@ import lime.tools.Platform;
 import sys.FileSystem;
 import sys.io.File;
 import sys.io.Process;
-#if (haxe_ver >= 4)
 import haxe.xml.Access;
-#else
-import haxe.xml.Fast as Access;
-#end
-#if (lime && lime_cffi && !macro)
+#if (lime_cffi && !macro)
 import lime.text.Font;
 
 @:access(lime.text.Font)
@@ -96,9 +92,7 @@ class HXProject extends Script
 		Log.verbose = inputData.logVerbose;
 		Log.enableColor = inputData.logEnableColor;
 
-		#if lime
 		System.dryRun = inputData.processDryRun;
-		#end
 
 		Haxelib.debug = inputData.haxelibDebug;
 
@@ -138,27 +132,18 @@ class HXProject extends Script
 
 		platformType = switch (target)
 		{
-			case AIR if (targetFlags.exists("ios") || targetFlags.exists("android")):
-				PlatformType.MOBILE;
-
-			case FLASH, HTML5, FIREFOX, WEB_ASSEMBLY:
+			case HTML5:
 				PlatformType.WEB;
 
-			case ANDROID, IOS, TVOS:
+			case ANDROID, IOS:
 				PlatformType.MOBILE;
 
-			case WINDOWS, MAC, LINUX, AIR:
+			case WINDOWS, MAC, LINUX:
 				PlatformType.DESKTOP;
 
 			default:
 				// TODO: Better handling of platform type for pluggable targets
 				PlatformType.CONSOLE;
-		}
-
-		if (target == WINDOWS && targetFlags.exists("uwp") || targetFlags.exists("winjs"))
-		{
-			targetFlags.set("uwp", "");
-			targetFlags.set("winjs", "");
 		}
 
 		meta = {};
@@ -189,7 +174,7 @@ class HXProject extends Script
 		else
 		{
 			environment = Sys.environment();
-			for (conflict in ["air", "android", "cpp", "flash", "hl", "html5", "ios", "linux", "mac", "neko", "webassembly", "windows"])
+			for (conflict in ["android", "cpp", "ios", "linux", "mac", "windows"])
 			{
 				environment.remove(conflict);
 			}
@@ -700,93 +685,15 @@ class HXProject extends Script
 				defines.set("console", "1");
 		}
 
-		if (targetFlags.exists("neko"))
+		if (platformType == DESKTOP && target != System.hostPlatform)
 		{
-			defines.set("targetType", "neko");
-			defines.set("native", "1");
-			defines.set("neko", "1");
-		}
-		else if (targetFlags.exists("hl"))
-		{
-			defines.set("targetType", "hl");
-			defines.set("native", "1");
-			defines.set("hl", "1");
-			if (targetFlags.exists("hlc"))
-			{
-				defines.set("hlc", "1");
-			}
-		}
-		else if (targetFlags.exists("java"))
-		{
-			defines.set("targetType", "java");
-			defines.set("native", "1");
-			defines.set("java", "1");
-		}
-		else if (targetFlags.exists("nodejs"))
-		{
-			defines.set("targetType", "nodejs");
-			defines.set("native", "1");
-			defines.set("nodejs", "1");
-		}
-		else if (targetFlags.exists("cs"))
-		{
-			defines.set("targetType", "cs");
-			defines.set("native", "1");
-			defines.set("cs", "1");
-		}
-		else if (target == Platform.FIREFOX)
-		{
-			defines.set("targetType", "js");
-			defines.set("html5", "1");
-		}
-		else if (target == Platform.AIR)
-		{
-			defines.set("targetType", "swf");
-			defines.set("flash", "1");
-			if (targetFlags.exists("ios")) defines.set("ios", "1");
-			if (targetFlags.exists("android")) defines.set("android", "1");
-		}
-		else if (target == Platform.WINDOWS && (targetFlags.exists("uwp") || targetFlags.exists("winjs")))
-		{
-			targetFlags.set("uwp", "");
-			targetFlags.set("winjs", "");
-
-			defines.set("targetType", "js");
-			defines.set("html5", "1");
-			defines.set("uwp", "1");
-			defines.set("winjs", "1");
-		}
-		else if (platformType == DESKTOP && target != cast System.hostPlatform)
-		{
-			defines.set("native", "1");
-
-			if (target == Platform.LINUX && targetFlags.exists("cpp"))
+			if (target == Platform.WINDOWS && (targetFlags.exists("cpp") || targetFlags.exists("mingw")))
 			{
 				defines.set("targetType", "cpp");
-				defines.set("cpp", "1");
-			}
-			else if (target == Platform.WINDOWS && (targetFlags.exists("cpp") || targetFlags.exists("mingw")))
-			{
-				defines.set("targetType", "cpp");
+				defines.set("native", "1");
 				defines.set("cpp", "1");
 				defines.set("mingw", "1");
 			}
-			else
-			{
-				targetFlags.set("neko", "1");
-
-				defines.set("targetType", "neko");
-				defines.set("neko", "1");
-			}
-		}
-		else if (target == Platform.WEB_ASSEMBLY)
-		{
-			defines.set("webassembly", "1");
-			defines.set("wasm", "1");
-			defines.set("emscripten", "1");
-			defines.set("targetType", "cpp");
-			defines.set("native", "1");
-			defines.set("cpp", "1");
 		}
 		else if (targetFlags.exists("cpp")
 			|| ((platformType != PlatformType.WEB) && !targetFlags.exists("html5")))
@@ -794,10 +701,6 @@ class HXProject extends Script
 			defines.set("targetType", "cpp");
 			defines.set("native", "1");
 			defines.set("cpp", "1");
-		}
-		else if (target == Platform.FLASH)
-		{
-			defines.set("targetType", "swf");
 		}
 
 		if (debug)
@@ -821,11 +724,6 @@ class HXProject extends Script
 			defines.set("static_link", "1");
 		}
 
-		if (defines.exists("SWF_PLAYER"))
-		{
-			environment.set("SWF_PLAYER", defines.get("SWF_PLAYER"));
-		}
-
 		defines.set(Std.string(target).toLowerCase(), "1");
 		defines.set("target", Std.string(target).toLowerCase());
 		defines.set("platform", defines.get("target"));
@@ -841,10 +739,7 @@ class HXProject extends Script
 			default:
 				defines.set("host", "unknown");
 		}
-
-		#if lime
 		defines.set("lime-tools", "1");
-		#end
 
 		defines.set("hxp", "1"); // TODO: Version?
 	}
@@ -1392,12 +1287,7 @@ class HXProject extends Script
 				Reflect.setField(context, "DEFINE_" + StringTools.formatUppercaseVariable(key), value);
 			}
 		}
-
-		if (target != Platform.FLASH)
-		{
-			compilerFlags.push("-D " + Std.string(target).toLowerCase());
-		}
-
+		compilerFlags.push("-D " + Std.string(target).toLowerCase());
 		compilerFlags.push("-D " + Std.string(platformType).toLowerCase());
 		compilerFlags = compilerFlags.concat(haxeflags);
 
