@@ -7,16 +7,10 @@ import lime.tools.Asset;
 import lime.tools.AssetType;
 import lime.tools.Dependency;
 import lime.tools.HXProject;
-#if lime
 import lime.utils.AssetManifest;
-#end
 import sys.io.File;
 import sys.FileSystem;
-#if (haxe_ver >= 4)
 import haxe.xml.Access;
-#else
-import haxe.xml.Fast as Access;
-#end
 
 class ProjectXMLParser extends HXProject
 {
@@ -53,112 +47,21 @@ class ProjectXMLParser extends HXProject
 
 	private function initialize():Void
 	{
-		switch (platformType)
+		if (target != System.hostPlatform)
 		{
-			case MOBILE:
-				defines.set("platformType", "mobile");
-				defines.set("mobile", "1");
-
-			case DESKTOP:
-				defines.set("platformType", "desktop");
-				defines.set("desktop", "1");
-
-			case WEB:
-				defines.set("platformType", "web");
-				defines.set("web", "1");
-
-			case CONSOLE:
-				defines.set("platformType", "console");
-				defines.set("console", "1");
-		}
-
-		if (targetFlags.exists("neko"))
-		{
-			defines.set("targetType", "neko");
-			defines.set("native", "1");
-			defines.set("neko", "1");
-		}
-		else if (targetFlags.exists("hl"))
-		{
-			defines.set("targetType", "hl");
-			defines.set("native", "1");
-			defines.set("hl", "1");
-		}
-		else if (targetFlags.exists("java"))
-		{
-			defines.set("targetType", "java");
-			defines.set("native", "1");
-			defines.set("java", "1");
-		}
-		else if (targetFlags.exists("nodejs"))
-		{
-			defines.set("targetType", "nodejs");
-			defines.set("native", "1");
-			defines.set("nodejs", "1");
-		}
-		else if (targetFlags.exists("cs"))
-		{
-			defines.set("targetType", "cs");
-			defines.set("native", "1");
-			defines.set("cs", "1");
-		}
-		else if (target == Platform.FIREFOX)
-		{
-			defines.set("targetType", "js");
-			defines.set("html5", "1");
-		}
-		else if (target == Platform.AIR)
-		{
-			defines.set("targetType", "swf");
-			defines.set("flash", "1");
-			if (targetFlags.exists("ios")) defines.set("ios", "1");
-			if (targetFlags.exists("android")) defines.set("android", "1");
-		}
-		else if (target == Platform.WINDOWS && (targetFlags.exists("uwp") || targetFlags.exists("winjs")))
-		{
-			targetFlags.set("uwp", "");
-			targetFlags.set("winjs", "");
-
-			defines.set("targetType", "js");
-			defines.set("html5", "1");
-			defines.set("uwp", "1");
-			defines.set("winjs", "1");
-		}
-		else if (platformType == DESKTOP && target != cast System.hostPlatform)
-		{
-			defines.set("native", "1");
-
-			if (target == Platform.WINDOWS && targetFlags.exists("mingw"))
+			if (target == Platform.WINDOWS && (targetFlags.exists("cpp") || targetFlags.exists("mingw")))
 			{
 				defines.set("targetType", "cpp");
+				defines.set("native", "1");
 				defines.set("cpp", "1");
 				defines.set("mingw", "1");
 			}
-			else
-			{
-				defines.set("targetType", "neko");
-				defines.set("neko", "1");
-			}
 		}
-		else if (target == Platform.WEB_ASSEMBLY)
-		{
-			defines.set("webassembly", "1");
-			defines.set("wasm", "1");
-			defines.set("emscripten", "1");
-			defines.set("targetType", "cpp");
-			defines.set("native", "1");
-			defines.set("cpp", "1");
-		}
-		else if (targetFlags.exists("cpp")
-			|| ((platformType != PlatformType.WEB) && !targetFlags.exists("html5")))
+		else if (targetFlags.exists("cpp"))
 		{
 			defines.set("targetType", "cpp");
 			defines.set("native", "1");
 			defines.set("cpp", "1");
-		}
-		else if (target == Platform.FLASH)
-		{
-			defines.set("targetType", "swf");
 		}
 
 		if (debug)
@@ -182,11 +85,6 @@ class ProjectXMLParser extends HXProject
 			defines.set("static_link", "1");
 		}
 
-		if (defines.exists("SWF_PLAYER"))
-		{
-			environment.set("SWF_PLAYER", defines.get("SWF_PLAYER"));
-		}
-
 		defines.set(Std.string(target).toLowerCase(), "1");
 		defines.set("target", Std.string(target).toLowerCase());
 		defines.set("platform", defines.get("target"));
@@ -202,10 +100,7 @@ class ProjectXMLParser extends HXProject
 			default:
 				defines.set("host", "unknown");
 		}
-
-		#if lime
 		defines.set("lime-tools", "1");
-		#end
 
 		defines.set("hxp", "1"); // TODO: Version?
 	}
@@ -422,17 +317,6 @@ class ProjectXMLParser extends HXProject
 				case "path":
 					app.path = Path.combine(extensionPath, substitute(element.att.path));
 
-				case "min-swf-version":
-					var version = Std.parseFloat(substitute(element.att.resolve("min-swf-version")));
-
-					if (version > app.swfVersion)
-					{
-						app.swfVersion = version;
-					}
-
-				case "swf-version":
-					app.swfVersion = Std.parseFloat(substitute(element.att.resolve("swf-version")));
-
 				case "preloader":
 					app.preloader = substitute(element.att.preloader);
 
@@ -576,41 +460,7 @@ class ProjectXMLParser extends HXProject
 				}
 				else
 				{
-					// if (type == null) {
-
 					include = "*";
-
-					/*} else {
-
-						switch (type) {
-
-							case IMAGE:
-
-								include = "*.jpg|*.jpeg|*.png|*.gif";
-
-							case SOUND:
-
-								include = "*.wav|*.ogg";
-
-							case MUSIC:
-
-								include = "*.mp2|*.mp3|*.ogg";
-
-							case FONT:
-
-								include = "*.otf|*.ttf";
-
-							case TEMPLATE:
-
-								include = "*";
-
-							default:
-
-								include = "*";
-
-						}
-
-					}*/
 				}
 
 				parseAssetsElementDirectory(path, targetPath, include, exclude, type, embed, library, glyphs, true);
@@ -759,7 +609,6 @@ class ProjectXMLParser extends HXProject
 
 		if (FileSystem.exists(jsonPath))
 		{
-			#if lime
 			try
 			{
 				var manifest = AssetManifest.fromFile(jsonPath);
@@ -791,7 +640,6 @@ class ProjectXMLParser extends HXProject
 				}
 			}
 			catch (e:Dynamic) {}
-			#end
 		}
 
 		if (!processedLibrary)
@@ -979,11 +827,6 @@ class ProjectXMLParser extends HXProject
 		{
 			app.path = Path.combine(extensionPath, substitute(element.att.path));
 		}
-
-		if (element.has.resolve("swf-version"))
-		{
-			app.swfVersion = Std.parseFloat(substitute(element.att.resolve("swf-version")));
-		}
 	}
 
 	private function parseXML(xml:Access, section:String, extensionPath:String = ""):Void
@@ -1007,9 +850,7 @@ class ProjectXMLParser extends HXProject
 						switch (name)
 						{
 							case "BUILD_DIR": app.path = value;
-							case "SWF_VERSION": app.swfVersion = Std.parseFloat(value);
 							case "PRERENDERED_ICON": config.set("ios.prerenderedIcon", value);
-							case "ANDROID_INSTALL_LOCATION": config.set("android.install-location", value);
 						}
 
 						defines.set(name, value);
@@ -1188,9 +1029,6 @@ class ProjectXMLParser extends HXProject
 
 					case "app":
 						parseAppElement(element, extensionPath);
-
-					case "java":
-						javaPaths.push(Path.combine(extensionPath, substitute(element.att.path)));
 
 					case "language":
 						languages.push(element.att.name);
@@ -1504,10 +1342,6 @@ class ProjectXMLParser extends HXProject
 
 						sources.push(path);
 
-					case "extension":
-
-					// deprecated
-
 					case "haxedef":
 						if (element.has.remove)
 						{
@@ -1542,7 +1376,7 @@ class ProjectXMLParser extends HXProject
 					case "assets":
 						parseAssetsElement(element, extensionPath);
 
-					case "library", "swf":
+					case "library":
 						if (element.has.handler)
 						{
 							if (element.has.type)
@@ -1605,11 +1439,6 @@ class ProjectXMLParser extends HXProject
 
 					case "module":
 						parseModuleElement(element, extensionPath);
-
-					case "ssl":
-
-					// if (wantSslCertificate())
-					// parseSsl (element);
 
 					case "sample":
 						samplePaths.push(Path.combine(extensionPath, substitute(element.att.path)));
@@ -1674,60 +1503,6 @@ class ProjectXMLParser extends HXProject
 					case "section":
 						parseXML(element, "", extensionPath);
 
-					case "certificate":
-						if (element.has.path || element.has.type)
-						{
-							keystore = new Keystore();
-						}
-
-						if (keystore != null)
-						{
-							if (element.has.path)
-							{
-								keystore.path = Path.combine(extensionPath, substitute(element.att.path));
-							}
-							else if (element.has.keystore)
-							{
-								keystore.path = Path.combine(extensionPath, substitute(element.att.keystore));
-							}
-
-							if (element.has.type)
-							{
-								keystore.type = substitute(element.att.type);
-							}
-
-							if (element.has.password)
-							{
-								keystore.password = substitute(element.att.password);
-							}
-
-							if (element.has.alias)
-							{
-								keystore.alias = substitute(element.att.alias);
-							}
-
-							if (element.has.resolve("alias-password"))
-							{
-								keystore.aliasPassword = substitute(element.att.resolve("alias-password"));
-							}
-							else if (element.has.alias_password)
-							{
-								keystore.aliasPassword = substitute(element.att.alias_password);
-							}
-						}
-
-						if (element.has.identity)
-						{
-							config.set("ios.identity", element.att.identity);
-							config.set("tvos.identity", element.att.identity);
-						}
-
-						if (element.has.resolve("team-id"))
-						{
-							config.set("ios.team-id", element.att.resolve("team-id"));
-							config.set("tvos.team-id", element.att.resolve("team-id"));
-						}
-
 					case "dependency":
 						var name = "";
 						var path = "";
@@ -1775,49 +1550,6 @@ class ProjectXMLParser extends HXProject
 
 						dependencies.push(dependency);
 
-					case "android":
-						// deprecated
-
-						for (attribute in element.x.attributes())
-						{
-							var name = attribute;
-							var value = substitute(element.att.resolve(attribute));
-
-							switch (name)
-							{
-								case "minimum-sdk-version":
-									config.set("android.minimum-sdk-version", Std.parseInt(value));
-
-								case "target-sdk-version":
-									config.set("android.target-sdk-version", Std.parseInt(value));
-
-								case "install-location":
-									config.set("android.install-location", value);
-
-								case "extension":
-									var extensions = config.getArrayString("android.extension");
-
-									if (extensions == null || extensions.indexOf(value) == -1)
-									{
-										config.push("android.extension", value);
-									}
-
-								case "permission":
-									var permissions = config.getArrayString("android.permission");
-
-									if (permissions == null || permissions.indexOf(value) == -1)
-									{
-										config.push("android.permission", value);
-									}
-
-								case "gradle-version":
-									config.set("android.gradle-version", value);
-
-								default:
-									name = formatAttributeName(attribute);
-							}
-						}
-
 					case "cpp":
 						// deprecated
 
@@ -1833,105 +1565,6 @@ class ProjectXMLParser extends HXProject
 
 								default:
 									name = formatAttributeName(attribute);
-							}
-						}
-
-					case "ios":
-						// deprecated
-
-						if (target == Platform.IOS)
-						{
-							if (element.has.deployment)
-							{
-								var deployment = Std.parseFloat(substitute(element.att.deployment));
-
-								// If it is specified, assume the dev knows what he is doing!
-								config.set("ios.deployment", deployment);
-							}
-
-							if (element.has.binaries)
-							{
-								var binaries = substitute(element.att.binaries);
-
-								switch (binaries)
-								{
-									case "fat":
-										ArrayTools.addUnique(architectures, Architecture.ARMV6);
-										ArrayTools.addUnique(architectures, Architecture.ARMV7);
-
-									case "armv6":
-										ArrayTools.addUnique(architectures, Architecture.ARMV6);
-										architectures.remove(Architecture.ARMV7);
-
-									case "armv7":
-										ArrayTools.addUnique(architectures, Architecture.ARMV7);
-										architectures.remove(Architecture.ARMV6);
-								}
-							}
-
-							if (element.has.devices)
-							{
-								config.set("ios.device", substitute(element.att.devices).toLowerCase());
-							}
-
-							if (element.has.compiler)
-							{
-								config.set("ios.compiler", substitute(element.att.compiler));
-							}
-
-							if (element.has.resolve("prerendered-icon"))
-							{
-								config.set("ios.prerenderedIcon", substitute(element.att.resolve("prerendered-icon")));
-							}
-
-							if (element.has.resolve("linker-flags"))
-							{
-								config.push("ios.linker-flags", substitute(element.att.resolve("linker-flags")));
-							}
-						}
-
-					case "tvos":
-						// deprecated
-
-						if (target == Platform.TVOS)
-						{
-							if (element.has.deployment)
-							{
-								var deployment = Std.parseFloat(substitute(element.att.deployment));
-
-								// If it is specified, assume the dev knows what he is doing!
-								config.set("tvos.deployment", deployment);
-							}
-
-							if (element.has.binaries)
-							{
-								var binaries = substitute(element.att.binaries);
-
-								switch (binaries)
-								{
-									case "arm64":
-										ArrayTools.addUnique(architectures, Architecture.ARM64);
-								}
-							}
-
-							if (element.has.devices)
-							{
-								config.set("tvos.device", substitute(element.att.devices).toLowerCase());
-							}
-
-							if (element.has.compiler)
-							{
-								config.set("tvos.compiler", substitute(element.att.compiler));
-							}
-
-							if (element.has.resolve("prerendered-icon"))
-							{
-								config.set("tvos.prerenderedIcon", substitute(element.att.resolve("prerendered-icon")));
-							}
-
-							if (element.has.resolve("linker-flags"))
-							{
-								config.push("tvos.linker-flags", substitute(element.att.resolve("linker-flags")));
 							}
 						}
 

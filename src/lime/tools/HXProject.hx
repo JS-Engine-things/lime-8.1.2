@@ -34,8 +34,6 @@ class HXProject extends Script
 	public var haxelibs:Array<Haxelib>;
 	public var host(get, null):Platform;
 	public var icons:Array<Icon>;
-	public var javaPaths:Array<String>;
-	public var keystore:Keystore;
 	public var languages:Array<String>;
 	public var launchStoryboard:LaunchStoryboard;
 	public var libraries:Array<Library>;
@@ -43,7 +41,6 @@ class HXProject extends Script
 	public var meta:MetaData;
 	public var modules:Map<String, ModuleData>;
 	public var ndlls:Array<NDLL>;
-	public var platformType:PlatformType;
 	public var postBuildCallbacks:Array<CLICommand>;
 	public var preBuildCallbacks:Array<CLICommand>;
 	public var samplePaths:Array<String>;
@@ -126,22 +123,8 @@ class HXProject extends Script
 		targetFlags = MapTools.copy(_targetFlags);
 		templatePaths = _templatePaths.copy();
 
-		platformType = PlatformType.DESKTOP;
 		architectures = [];
 		excludeArchitectures = [];
-
-		platformType = switch (target)
-		{
-			case ANDROID, IOS:
-				PlatformType.MOBILE;
-
-			case WINDOWS, MAC, LINUX:
-				PlatformType.DESKTOP;
-
-			default:
-				// TODO: Better handling of platform type for pluggable targets
-				PlatformType.CONSOLE;
-		}
 
 		meta = {};
 		app = {};
@@ -181,7 +164,6 @@ class HXProject extends Script
 		haxeflags = new Array<String>();
 		haxelibs = new Array<Haxelib>();
 		icons = new Array<Icon>();
-		javaPaths = new Array<String>();
 		languages = new Array<String>();
 		libraries = new Array<Library>();
 		libraryHandlers = new Map<String, String>();
@@ -248,13 +230,6 @@ class HXProject extends Script
 			project.icons.push(icon.clone());
 		}
 
-		project.javaPaths = javaPaths.copy();
-
-		if (keystore != null)
-		{
-			project.keystore = keystore.clone();
-		}
-
 		project.languages = languages.copy();
 
 		if (launchStoryboard != null)
@@ -284,7 +259,6 @@ class HXProject extends Script
 			project.ndlls.push(ndll.clone());
 		}
 
-		project.platformType = platformType;
 		project.postBuildCallbacks = postBuildCallbacks.copy();
 		project.preBuildCallbacks = preBuildCallbacks.copy();
 		project.samplePaths = samplePaths.copy();
@@ -379,10 +353,8 @@ class HXProject extends Script
 
 		var args = [
 			name,
-			#if lime
 			"-lib", "lime",
 			"-lib", "hxp",
-			#end
 			"-cp", tempDirectory,
 			"-cp", Path.combine(Haxelib.getPath(new Haxelib("hxp")), "src")
 		];
@@ -432,7 +404,7 @@ class HXProject extends Script
 
 		try
 		{
-			#if (lime && !eval)
+			#if (!eval)
 			var nekoOutput = Path.combine(tempDirectory, name + ".n");
 			System.runCommand("", "haxe", args.concat(["--main", "lime.tools.HXProject", "-neko", nekoOutput]));
 			System.runCommand("", "neko", [nekoOutput, inputFile, outputFile]);
@@ -508,12 +480,6 @@ class HXProject extends Script
 		{
 			return null;
 		}
-
-		// if (!userDefines.exists (haxelib.name)) {
-		//
-		// userDefines.set (haxelib.name, Haxelib.getVersion (haxelib));
-		//
-		// }
 
 		return HXProject.fromPath(path, userDefines);
 	}
@@ -652,33 +618,16 @@ class HXProject extends Script
 		}
 	}
 
-	// #if lime
 	public function includeXML(xml:String):Void
 	{
 		var projectXML = new ProjectXMLParser();
 		@:privateAccess projectXML.parseXML(new Access(Xml.parse(xml).firstElement()), "");
 		merge(projectXML);
 	}
-	// #end
 
 	private function initializeDefines():Void
 	{
-		switch (platformType)
-		{
-			case MOBILE:
-				defines.set("platformType", "mobile");
-				defines.set("mobile", "1");
-
-			case DESKTOP:
-				defines.set("platformType", "desktop");
-				defines.set("desktop", "1");
-
-			case CONSOLE:
-				defines.set("platformType", "console");
-				defines.set("console", "1");
-		}
-
-		if (platformType == DESKTOP && target != System.hostPlatform)
+		if (target != System.hostPlatform)
 		{
 			if (target == Platform.WINDOWS && (targetFlags.exists("cpp") || targetFlags.exists("mingw")))
 			{
@@ -794,16 +743,6 @@ class HXProject extends Script
 			haxeflags = ArrayTools.concatUnique(haxeflags, project.haxeflags);
 			haxelibs = ArrayTools.concatUnique(haxelibs, project.haxelibs, true, "name");
 			icons = ArrayTools.concatUnique(icons, project.icons);
-			javaPaths = ArrayTools.concatUnique(javaPaths, project.javaPaths, true);
-
-			if (keystore == null)
-			{
-				keystore = project.keystore;
-			}
-			else
-			{
-				keystore.merge(project.keystore);
-			}
 
 			if (launchStoryboard == null)
 			{
@@ -1252,7 +1191,6 @@ class HXProject extends Script
 			}
 		}
 		compilerFlags.push("-D " + Std.string(target).toLowerCase());
-		compilerFlags.push("-D " + Std.string(platformType).toLowerCase());
 		compilerFlags = compilerFlags.concat(haxeflags);
 
 		if (compilerFlags.length == 0)
@@ -1302,39 +1240,7 @@ class HXProject extends Script
 		context.RELEASE = (type == "release");
 		context.DEBUG = debug;
 		context.FINAL = (type == "final");
-		context.SWF_VERSION = app.swfVersion;
 		context.PRELOADER_NAME = app.preloader;
-
-		if (keystore != null)
-		{
-			if (keystore.path != null)
-			{
-				context.KEY_STORE = Path.tryFullPath(keystore.path);
-			}
-
-			if (keystore.password != null)
-			{
-				context.KEY_STORE_PASSWORD = keystore.password;
-			}
-
-			if (keystore.alias != null)
-			{
-				context.KEY_STORE_ALIAS = keystore.alias;
-			}
-			else if (keystore.path != null)
-			{
-				context.KEY_STORE_ALIAS = Path.withoutExtension(Path.withoutDirectory(keystore.path));
-			}
-
-			if (keystore.aliasPassword != null)
-			{
-				context.KEY_STORE_ALIAS_PASSWORD = keystore.aliasPassword;
-			}
-			else if (keystore.password != null)
-			{
-				context.KEY_STORE_ALIAS_PASSWORD = keystore.password;
-			}
-		}
 
 		context.config = config;
 

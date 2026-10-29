@@ -10,10 +10,6 @@ import lime.tools.*;
 import sys.io.File;
 import sys.io.Process;
 import sys.FileSystem;
-import utils.publish.*;
-import utils.CreateTemplate;
-import utils.JavaExternGenerator;
-import utils.PlatformSetup;
 
 @:access(lime.tools.HXProject)
 class CommandLineTools
@@ -222,13 +218,6 @@ class CommandLineTools
 							target = cast System.hostPlatform;
 							targetFlags.set("cpp", "");
 
-						case "iphone", "iphoneos":
-							target = Platform.IOS;
-
-						case "iphonesim":
-							target = Platform.IOS;
-							targetFlags.set("simulator", "");
-
 						case "mac", "macos":
 							target = Platform.MAC;
 
@@ -279,8 +268,6 @@ class CommandLineTools
 						}
 						else
 						{
-							// project =  HXProject.fromPath (path);
-
 							if (project == null)
 							{
 								project = new HXProject();
@@ -336,19 +323,6 @@ class CommandLineTools
 						}
 					}
 				}
-
-			case "publish":
-				if (words.length < 1 || words.length > 2)
-				{
-					Log.error("Incorrect number of arguments for command '" + command + "'");
-					return;
-				}
-
-				publishProject();
-
-			case "installer", "copy-if-newer":
-
-			// deprecated?
 
 			default:
 				Log.error("'" + command + "' is not a valid command");
@@ -512,12 +486,6 @@ class CommandLineTools
 
 			switch (project.target)
 			{
-				case ANDROID:
-					platform = new AndroidPlatform(command, project, targetFlags);
-
-				case IOS:
-					platform = new IOSPlatform(command, project, targetFlags);
-
 				case WINDOWS:
 					platform = new WindowsPlatform(command, project, targetFlags);
 
@@ -797,8 +765,6 @@ class CommandLineTools
 			Log.println("");
 			Log.println(" " + Log.accentColor + "Targets:" + Log.resetColor);
 			Log.println("");
-			Log.println("  \x1b[1mandroid\x1b[0m -- Create an Android application");
-			Log.println("  \x1b[1mios\x1b[0m -- Create an iOS application");
 			Log.println("  \x1b[1mlinux\x1b[0m -- Create a Linux application");
 			Log.println("  \x1b[1mmac\x1b[0m -- Create a macOS application");
 			Log.println("  \x1b[1mwindows\x1b[0m -- Create a Windows application");
@@ -850,36 +816,16 @@ class CommandLineTools
 		if (isProjectCommand)
 		{
 			Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-cpp\x1b[0m -- Build with C++ (default behavior)");
-			Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-neko\x1b[0m -- Build with Neko instead of C++");
-			Log.println("  \x1b[3m(windows|mac|ios|android)\x1b[0m \x1b[1m-air\x1b[0m -- Build with AIR instead of C++");
 		}
 
 		if (isBuildCommand)
 		{
-			Log.println("  \x1b[3m(windows|mac|linux|android)\x1b[0m \x1b[1m-static\x1b[0m -- Compile as a static C++ executable");
-			Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-32\x1b[0m -- Compile for 32-bit instead of the OS default");
+			Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-static\x1b[0m -- Compile as a static C++ executable");
 			Log.println("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-64\x1b[0m -- Compile for 64-bit instead of the OS default");
-			Log.println("  \x1b[3m(ios|android)\x1b[0m \x1b[1m-armv6\x1b[0m -- Compile for ARMv6 instead of the OS defaults");
-			Log.println("  \x1b[3m(ios|android)\x1b[0m \x1b[1m-armv7\x1b[0m -- Compile for ARMv7 instead of the OS defaults");
-			Log.println("  \x1b[3m(ios|android)\x1b[0m \x1b[1m-armv7s\x1b[0m -- Compile for ARMv7s instead of the OS defaults");
-			Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-arm64\x1b[0m -- Compile for ARM64 instead of the OS defaults");
 		}
 
 		if (isProjectCommand)
 		{
-			Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-archive\x1b[0m -- Generate iOS archive during build");
-		}
-
-		if (isProjectCommand)
-		{
-			if (command != "run" && command != "trace")
-			{
-				Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-xcode\x1b[0m -- Launch the generated Xcode project");
-			}
-			Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-simulator\x1b[0m -- Target the device simulator");
-			Log.println("  \x1b[3m(ios)\x1b[0m \x1b[1m-simulator -ipad\x1b[0m -- Build/test for the iPad Simulator");
-			Log.println("  \x1b[3m(android)\x1b[0m \x1b[1m-emulator\x1b[0m -- Target the device emulator");
-
 			Log.println("");
 			Log.println(" " + Log.accentColor + "Experimental Options:" + Log.resetColor);
 			Log.println("");
@@ -1276,28 +1222,6 @@ class CommandLineTools
 			catch (e:Dynamic) {}
 		}
 
-		if (targetFlags.exists("air"))
-		{
-			switch (targetName)
-			{
-				case "android":
-					targetName = "air";
-					targetFlags.set("android", "");
-
-				case "ios":
-					targetName = "air";
-					targetFlags.set("ios", "");
-
-				case "windows":
-					targetName = "air";
-					targetFlags.set("windows", "");
-
-				case "mac", "macos":
-					targetName = "air";
-					targetFlags.set("mac", "");
-			}
-		}
-
 		var target:Platform = null;
 
 		switch (targetName)
@@ -1305,13 +1229,6 @@ class CommandLineTools
 			case "cpp":
 				target = cast System.hostPlatform;
 				targetFlags.set("cpp", "");
-
-			case "iphone", "iphoneos":
-				target = Platform.IOS;
-
-			case "iphonesim":
-				target = Platform.IOS;
-				targetFlags.set("simulator", "");
 
 			case "mac", "macos":
 				target = Platform.MAC;
@@ -1833,33 +1750,6 @@ class CommandLineTools
 					{
 						overrides.templatePaths.push(argValue);
 					}
-					else if (StringTools.startsWith(field, "certificate-"))
-					{
-						if (overrides.keystore == null)
-						{
-							overrides.keystore = new Keystore();
-						}
-
-						field = StringTools.replace(field, "certificate-", "");
-
-						if (field == "alias-password") field = "aliasPassword";
-
-						if (Reflect.hasField(overrides.keystore, field))
-						{
-							Reflect.setField(overrides.keystore, field, argValue);
-						}
-
-						if (field == "identity")
-						{
-							overrides.config.set("ios.identity", argValue);
-							overrides.config.set("tvos.identity", argValue);
-						}
-						else if (field == "team-id")
-						{
-							overrides.config.set("ios.team-id", argValue);
-							overrides.config.set("tvos.team-id", argValue);
-						}
-					}
 					else if (StringTools.startsWith(field, "app-")
 						|| StringTools.startsWith(field, "meta-")
 						|| StringTools.startsWith(field, "window-"))
@@ -2033,27 +1923,6 @@ class CommandLineTools
 			{
 				words.push(argument);
 			}
-		}
-	}
-
-	private function publishProject()
-	{
-		switch (words[words.length - 1])
-		{
-			case "firefox":
-				var project = initializeProject(null, "firefox");
-
-				Log.info("", Log.accentColor + "Using publishing target: FIREFOX MARKETPLACE" + Log.resetColor);
-
-				// if (FirefoxMarketplace.isValid (project)) {
-				//
-				// buildProject (project, "build");
-				//
-				// Log.info ("", "\n" + Log.accentColor + "Running command: PUBLISH" + Log.resetColor);
-				//
-				// FirefoxMarketplace.publish (project);
-				//
-				// }
 		}
 	}
 
