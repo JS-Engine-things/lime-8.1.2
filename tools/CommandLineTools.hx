@@ -48,8 +48,6 @@ class CommandLineTools
 
 		overrides = new HXProject();
 
-		// Haxelib.setOverridePath (new Haxelib ("lime-tools"), Path.combine (Haxelib.getPath (new Haxelib ("lime")), "tools"));
-
 		processArguments();
 		version = Haxelib.getVersion();
 
@@ -94,9 +92,6 @@ class CommandLineTools
 
 			case "create":
 				createTemplate();
-
-			case "install", "remove", "upgrade":
-				updateLibrary();
 
 			case "clean", "update", "display", "build", "run", "rerun", "uninstall", "trace", "test", "deploy":
 				if (words.length < 1 || words.length > 2)
@@ -629,25 +624,25 @@ class CommandLineTools
 	{
 		var commands = [
 
-			         "config" => "Display or set command-line configuration values",    "create" => "Create a new project or extension using templates",
-			                    "clean" => "Clean the specified project and target",     "update" => "Copy assets for the specified project and target",
-			  "build" => "Compile and package for the specified project and target",    "run" => "Install and run for the specified project and target",
-			                       "test" => "Update, build and run in one command",                                  "help" => "Show this information",
-			          "trace" => "Trace output for the specifed project and target",                            "deploy" => "Archive and upload builds",
-			"display" => "Display information for the specified project and target",             "rebuild" => "Recompile native binaries for libraries",
-			       "install" => "Install a library from haxelib, plus dependencies",                        "remove" => "Remove a library from haxelib",
-			                          "upgrade" => "Upgrade a library from haxelib", "setup" => "Setup " + defaultLibraryName + " or a specific platform"
-
+			"config" => "Display or set command-line configuration values",
+			"create" => "Create a new project or extension using templates",
+			"clean" => "Clean the specified project and target",
+			"update" => "Copy assets for the specified project and target",
+			"build" => "Compile and package for the specified project and target",
+			"run" => "Install and run for the specified project and target",
+			"test" => "Update, build and run in one command",
+			"help" => "Show this information",
+			"trace" => "Trace output for the specifed project and target",
+			"deploy" => "Archive and upload builds",
+			"display" => "Display information for the specified project and target",
+			"rebuild" => "Recompile native binaries for libraries",
+			"install" => "Install a library from haxelib, plus dependencies",
+			"remove" => "Remove a library from haxelib",
+			"setup" => "Setup " + defaultLibraryName + " or a specific platform"
 		];
 
 		var basicCommands = ["config", "create", "clean", "update", "build", "run", "test", "help"];
-		var additionalCommands = ["trace", "deploy", "display", "rebuild", "install", "remove", "upgrade", "setup"];
-
-		if (targetFlags.exists("openfl"))
-		{
-			commands.set("process", "Process a SWF asset for use with " + defaultLibraryName);
-			additionalCommands.push("process");
-		}
+		var additionalCommands = ["trace", "deploy", "display", "rebuild", "install", "remove", "setup"];
 
 		var command = (words.length > 0 ? words[0] : "");
 		var isProjectCommand = false, isBuildCommand = false;
@@ -715,7 +710,7 @@ class CommandLineTools
 					+ commandName
 					+ " config remove <name>\x1b[0m \x1b[3;37m[options]\x1b[0m");
 
-			case "install", "remove", "upgrade":
+			case "install", "remove":
 				Log.println(" "
 					+ Log.accentColor
 					+ "Usage:\x1b[0m \x1b[1m"
@@ -1923,59 +1918,6 @@ class CommandLineTools
 			{
 				words.push(argument);
 			}
-		}
-	}
-
-	private function updateLibrary():Void
-	{
-		if ((words.length < 1 && command != "upgrade") || words.length > 1)
-		{
-			Log.error("Incorrect number of arguments for command '" + command + "'");
-			return;
-		}
-
-		Log.info("", Log.accentColor + "Running command: " + command.toUpperCase() + Log.resetColor);
-
-		var name = defaultLibrary;
-
-		if (words.length > 0)
-		{
-			name = words[0];
-		}
-
-		var haxelib = new Haxelib(name);
-		var path = Haxelib.getPath(haxelib);
-
-		switch (command)
-		{
-			case "install":
-				if (path == null || path == "")
-				{
-					PlatformSetup.installHaxelib(haxelib);
-				}
-				else
-				{
-					PlatformSetup.updateHaxelib(haxelib);
-				}
-
-				PlatformSetup.setupHaxelib(haxelib);
-
-			case "remove":
-				if (path != null && path != "")
-				{
-					Haxelib.runCommand("", ["remove", name]);
-				}
-
-			case "upgrade":
-				if (path != null && path != "")
-				{
-					PlatformSetup.updateHaxelib(haxelib);
-					PlatformSetup.setupHaxelib(haxelib);
-				}
-				else
-				{
-					Log.warn("\"" + haxelib.name + "\" is not a valid haxelib, or has not been installed");
-				}
 		}
 	}
 }
