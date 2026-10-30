@@ -20,7 +20,7 @@ jobs:
         run: echo "HAXEPATH=$HAXE_STD_PATH/.." >> $GITHUB_ENV
       - name: Install Haxe dependencies
         run: |
-          haxelib git hxcpp https://github.com/ShadowEngineTeam/hxcpp --quiet
+          haxelib git hxcpp https://github.com/ShadowEngineTeam/libhxcpp --quiet
           haxelib git format https://github.com/HaxeFoundation/format 9d69fb342d030fa120d2deafafbbffad248332b8 --quiet
           haxelib git hxp https://github.com/openfl/hxp 47ef5ae6569cb0961761a2fbb416694df067124c --quiet
       - name: Enable HXCPP compile cache
@@ -31,7 +31,8 @@ jobs:
         run: |
           haxelib run lime rebuild windows -64 -release -nocffi -D HXCPP_OPTIMIZE_LINK
           haxelib run lime rebuild windows -arm64 -release -D HXCPP_ARM64 -D HXCPP_OPTIMIZE_LINK
-          haxelib run lime rebuild alias
+          haxelib run lime rebuild alias -64
+          haxelib run lime rebuild alias -arm64
       - name: Upload Artifact (x86_64)
         uses: actions/upload-artifact@main
         with:
@@ -47,6 +48,7 @@ jobs:
         with:
           name: WindowsArm64-NDLL
           path: |
+            templates/bin/alias/WindowsArm64/
             ndll/WindowsArm64/
             !**/.gitignore
             lime.png
