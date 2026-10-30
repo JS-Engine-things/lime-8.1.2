@@ -8,7 +8,6 @@ import hxp.System;
 import lime.tools.Architecture;
 import lime.tools.AssetHelper;
 import lime.tools.CPPHelper;
-import lime.tools.DeploymentHelper;
 import lime.tools.HXProject;
 import lime.tools.Icon;
 import lime.tools.IconHelper;
@@ -44,10 +43,11 @@ class WindowsPlatform extends PlatformTarget
 			{
 				case ARM64:
 					defaults.architectures = [ARM64];
-				case X86:
-					Log.error("32-bit Windows hosts are not supported in this fork.");
-				default:
+				case X64:
 					defaults.architectures = [X64];
+				default:
+					Log.error("32-bit Windows hosts are not supported in this fork.");
+					
 			}
 		}
 
@@ -62,11 +62,7 @@ class WindowsPlatform extends PlatformTarget
 
 		for (architecture in project.architectures)
 		{
-			if (architecture == Architecture.X86)
-			{
-				Log.error("32-bit (x86) Windows builds are not supported in this fork. Remove x86 from your project's architectures.");
-			}
-			else if (targetFlags.exists("arm64") || architecture == Architecture.ARM64)
+			if (targetFlags.exists("arm64") || architecture == Architecture.ARM64)
 			{
 				isArm = true;
 			}
@@ -144,11 +140,6 @@ class WindowsPlatform extends PlatformTarget
 		CPPHelper.compile(project, targetDirectory + "/obj", flags);
 
 		System.copyFile(targetDirectory + "/obj/ApplicationMain" + (project.debug ? "-debug" : "") + ".exe", executablePath);
-	}
-
-	public override function deploy():Void
-	{
-		DeploymentHelper.deploy(project, targetFlags, targetDirectory, "Windows" + (is64 ? "64" : ""));
 	}
 
 	public override function display():Void
@@ -243,7 +234,7 @@ class WindowsPlatform extends PlatformTarget
 			arguments.push("-verbose");
 		}
 
-		if (project.target == System.hostPlatform)
+		if (Std.string(project.target) == Std.string(System.hostPlatform))
 		{
 			arguments = arguments.concat(["-livereload"]);
 			System.runCommand(applicationDirectory, Path.withoutDirectory(executablePath), arguments);

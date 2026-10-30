@@ -34,6 +34,7 @@ class HXProject extends Script
 	public var haxelibs:Array<Haxelib>;
 	public var host(get, null):Platform;
 	public var icons:Array<Icon>;
+	public var adaptiveIcon:AdaptiveIcon;
 	public var languages:Array<String>;
 	public var launchStoryboard:LaunchStoryboard;
 	public var libraries:Array<Library>;
@@ -228,6 +229,11 @@ class HXProject extends Script
 		for (icon in icons)
 		{
 			project.icons.push(icon.clone());
+		}
+
+		if (adaptiveIcon != null)
+		{
+			project.adaptiveIcon = adaptiveIcon.clone();
 		}
 
 		project.languages = languages.copy();
@@ -627,7 +633,7 @@ class HXProject extends Script
 
 	private function initializeDefines():Void
 	{
-		if (target != System.hostPlatform)
+		if (Std.string(target).toLowerCase() != Std.string(System.hostPlatform).toLowerCase())
 		{
 			if (target == Platform.WINDOWS && (targetFlags.exists("cpp") || targetFlags.exists("mingw")))
 			{
@@ -743,6 +749,11 @@ class HXProject extends Script
 			haxeflags = ArrayTools.concatUnique(haxeflags, project.haxeflags);
 			haxelibs = ArrayTools.concatUnique(haxelibs, project.haxelibs, true, "name");
 			icons = ArrayTools.concatUnique(icons, project.icons);
+
+			if (project.adaptiveIcon != null)
+			{
+				adaptiveIcon = project.adaptiveIcon;
+			}
 
 			if (launchStoryboard == null)
 			{

@@ -19,24 +19,16 @@ class RunScript
 
 	private static function rebuildAlias(limeDirectory:String, aliasDirectory:String, args:Array<String>):Void
 	{
-		// Defaults to the host architecture; -32, -64, -arm64 or -armv7 cross-builds like `lime rebuild <platform>`.
+		// Defaults to the host architecture; -64 or -arm64 cross-builds like `lime rebuild <platform>`.
 		var architecture:HostArchitecture = System.hostArchitecture;
 
-		if (args.indexOf("-32") > -1)
-		{
-			architecture = X86;
-		}
-		else if (args.indexOf("-64") > -1)
+		if (args.indexOf("-64") > -1)
 		{
 			architecture = X64;
 		}
 		else if (args.indexOf("-arm64") > -1)
 		{
 			architecture = ARM64;
-		}
-		else if (args.indexOf("-armv7") > -1)
-		{
-			architecture = ARMV7;
 		}
 
 		var aliasTargetDirectory:String = Path.combine(limeDirectory, "templates/bin/alias/");
@@ -89,21 +81,13 @@ class RunScript
 					rebuildAliasExecutable('MacArm64', 'HXCPP_ARM64');
 				}
 			case LINUX:
-				if (architecture == ARMV7)
-				{
-					rebuildAliasExecutable('LinuxArm', 'HXCPP_ARMV7');
-				}
-				else if (architecture == ARM64)
+				if (architecture == ARM64)
 				{
 					rebuildAliasExecutable('LinuxArm64', 'HXCPP_ARM64');
 				}
 				else if (architecture == X64)
 				{
 					rebuildAliasExecutable('Linux64', 'HXCPP_M64');
-				}
-				else if (architecture == X86)
-				{
-					rebuildAliasExecutable('Linux', 'HXCPP_M32');
 				}
 		}
 	}

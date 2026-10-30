@@ -47,7 +47,7 @@ class ProjectXMLParser extends HXProject
 
 	private function initialize():Void
 	{
-		if (target != System.hostPlatform)
+		if (Std.string(target).toLowerCase() != Std.string(System.hostPlatform).toLowerCase())
 		{
 			if (target == Platform.WINDOWS && (targetFlags.exists("cpp") || targetFlags.exists("mingw")))
 			{
@@ -212,6 +212,14 @@ class ProjectXMLParser extends HXProject
 		}
 
 		return true;
+	}
+
+	private function syncArchitectureDefines():Void
+	{
+		for (arch in architectures)
+		{
+			defines.set(arch.getConditionName(), "1");
+		}
 	}
 
 	private function findIncludeFile(base:String):String
@@ -972,6 +980,7 @@ class ProjectXMLParser extends HXProject
 
 						if (path != null && path != "" && FileSystem.exists(path) && !FileSystem.isDirectory(path))
 						{
+							syncArchitectureDefines();
 							var includeProject = new ProjectXMLParser(path, defines);
 
 							if (includeProject != null && haxelib != null)
@@ -1165,23 +1174,41 @@ class ProjectXMLParser extends HXProject
 					case "architecture":
 						if (element.has.name)
 						{
-							var name = substitute(element.att.name);
+							var name = new Architecture(substitute(element.att.name));
 
-							if (Reflect.hasField(Architecture, name.toUpperCase()))
+							if (name != null)
 							{
-								ArrayTools.addUnique(architectures, Reflect.field(Architecture, name.toUpperCase()));
+								ArrayTools.addUnique(architectures, name);
+							}
+							else if (name.toLowerCase() == "x86_64")
+							{
+								ArrayTools.addUnique(architectures, Architecture.X64);
+							}
+							else
+							{
+								Log.warn("Ignoring unknown architecture: " + name);
 							}
 						}
 
 						if (element.has.exclude)
 						{
-							var exclude = substitute(element.att.exclude);
+							var exclude = new Architecture(substitute(element.att.exclude));
 
-							if (Reflect.hasField(Architecture, exclude.toUpperCase()))
+							if (exclude != null)
 							{
-								ArrayTools.addUnique(excludeArchitectures, Reflect.field(Architecture, exclude.toUpperCase()));
+								ArrayTools.addUnique(excludeArchitectures, exclude);
+							}
+							else if (exclude.toLowerCase() == "x86_64")
+							{
+								ArrayTools.addUnique(excludeArchitectures, Architecture.X64);
+							}
+							else
+							{
+								Log.warn("Ignoring unknown architecture: " + exclude);
 							}
 						}
+
+						syncArchitectureDefines();
 
 					case "launchImage", "splashscreen", "splashScreen":
 						var path = "";
@@ -1536,6 +1563,16 @@ class ProjectXMLParser extends HXProject
 						if (element.has.resolve("force-load"))
 						{
 							dependency.forceLoad = parseBool(element.att.resolve("force-load"));
+						}
+
+						if (element.has.resolve("allow-web-workers"))
+						{
+							dependency.allowWebWorkers = parseBool(element.att.resolve("allow-web-workers"));
+						}
+
+						if (element.has.resolve("type"))
+						{
+							dependency.type = element.att.resolve("type");
 						}
 
 						var i = dependencies.length;

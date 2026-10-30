@@ -93,7 +93,7 @@ class CommandLineTools
 			case "create":
 				createTemplate();
 
-			case "clean", "update", "display", "build", "run", "rerun", "uninstall", "trace", "test", "deploy":
+			case "clean", "update", "display", "build", "run", "rerun", "uninstall", "trace", "test":
 				if (words.length < 1 || words.length > 2)
 				{
 					Log.error("Incorrect number of arguments for command '" + command + "'");
@@ -396,21 +396,13 @@ class CommandLineTools
 			case LINUX:
 				var arguments = Sys.args();
 
-				if (System.hostArchitecture == ARMV7)
-				{
-					untyped $loader.path = $array(path + "LinuxArm/", $loader.path);
-				}
-				else if (System.hostArchitecture == ARM64)
+				if (System.hostArchitecture == ARM64)
 				{
 					untyped $loader.path = $array(path + "LinuxArm64/", $loader.path);
 				}
 				else if (System.hostArchitecture == X64)
 				{
 					untyped $loader.path = $array(path + "Linux64/", $loader.path);
-				}
-				else
-				{
-					untyped $loader.path = $array(path + "Linux/", $loader.path);
 				}
 
 			default:
@@ -531,52 +523,41 @@ class CommandLineTools
 				sampleName = words[0].substr(colonIndex + 1);
 			}
 
-			if (projectName == "project" || sampleName == "project")
+			if (sampleName == null)
 			{
-				CreateTemplate.createProject(words, userDefines, overrides);
-			}
-			else if (projectName == "extension" || sampleName == "extension")
-			{
-				CreateTemplate.createExtension(words, userDefines);
-			}
-			else
-			{
-				if (sampleName == null)
+				var sampleExists = false;
+				var defines = new Map<String, Dynamic>();
+				defines.set("create", 1);
+				var project = HXProject.fromHaxelib(new Haxelib(defaultLibrary), defines);
+
+				for (samplePath in project.samplePaths)
 				{
-					var sampleExists = false;
-					var defines = new Map<String, Dynamic>();
-					defines.set("create", 1);
-					var project = HXProject.fromHaxelib(new Haxelib(defaultLibrary), defines);
-
-					for (samplePath in project.samplePaths)
+					if (FileSystem.exists(Path.combine(samplePath, projectName)))
 					{
-						if (FileSystem.exists(Path.combine(samplePath, projectName)))
-						{
-							sampleExists = true;
-						}
-					}
-
-					if (sampleExists)
-					{
-						CreateTemplate.createSample(words, userDefines);
-					}
-					else if (Haxelib.getPath(new Haxelib(projectName)) != "")
-					{
-						CreateTemplate.listSamples(projectName, userDefines);
-					}
-					else if (projectName == "" || projectName == null)
-					{
-						CreateTemplate.listSamples(defaultLibrary, userDefines);
-					}
-					else
-					{
-						CreateTemplate.listSamples(null, userDefines);
+						sampleExists = true;
 					}
 				}
-				else
+
+				if (sampleExists)
 				{
 					CreateTemplate.createSample(words, userDefines);
 				}
+				else if (Haxelib.getPath(new Haxelib(projectName)) != "")
+				{
+					CreateTemplate.listSamples(projectName, userDefines);
+				}
+				else if (projectName == "" || projectName == null)
+				{
+					CreateTemplate.listSamples(defaultLibrary, userDefines);
+				}
+				else
+				{
+					CreateTemplate.listSamples(null, userDefines);
+				}
+			}
+			else
+			{
+				CreateTemplate.createSample(words, userDefines);
 			}
 		}
 		else
@@ -633,7 +614,6 @@ class CommandLineTools
 			"test" => "Update, build and run in one command",
 			"help" => "Show this information",
 			"trace" => "Trace output for the specifed project and target",
-			"deploy" => "Archive and upload builds",
 			"display" => "Display information for the specified project and target",
 			"rebuild" => "Recompile native binaries for libraries",
 			"install" => "Install a library from haxelib, plus dependencies",
@@ -642,7 +622,7 @@ class CommandLineTools
 		];
 
 		var basicCommands = ["config", "create", "clean", "update", "build", "run", "test", "help"];
-		var additionalCommands = ["trace", "deploy", "display", "rebuild", "install", "remove", "setup"];
+		var additionalCommands = ["trace", "display", "rebuild", "install", "remove", "setup"];
 
 		var command = (words.length > 0 ? words[0] : "");
 		var isProjectCommand = false, isBuildCommand = false;
@@ -662,7 +642,7 @@ class CommandLineTools
 					+ commandName
 					+ " setup\x1b[0m \x1b[3;37m(target)\x1b[0m \x1b[3;37m[options]\x1b[0m");
 
-			case "clean", "update", "build", "run", "test", "display", "deploy", "trace":
+			case "clean", "update", "build", "run", "test", "display", "trace":
 				Log.println(" "
 					+ Log.accentColor
 					+ "Usage:\x1b[0m \x1b[1m"
@@ -1414,17 +1394,6 @@ class CommandLineTools
 
 		project.haxedefs.set("tools", version);
 
-		/*if (userDefines.exists ("nme")) {
-
-			project.haxedefs.set ("nme_install_tool", 1);
-			project.haxedefs.set ("nme_ver", version);
-			project.haxedefs.set ("nme" + version.split (".")[0], 1);
-
-			project.config.cpp.buildLibrary = "hxcpp";
-			project.config.cpp.requireBuild = false;
-
-		}*/
-
 		project.merge(overrides);
 
 		for (haxelib in project.haxelibs)
@@ -1657,6 +1626,7 @@ class CommandLineTools
 		var catchHaxeFlag = false;
 		var catchDefine = false;
 
+		// most yanderedev ass code I've seen so far lmao
 		for (argument in arguments)
 		{
 			var equals = argument.indexOf("=");
@@ -1855,27 +1825,13 @@ class CommandLineTools
 				}
 				else
 				{
-					if (argument.substr(0, 4) == "-arm")
+					if (argument == "-arm64")
 					{
-						try
-						{
-							var name = argument.substr(1).toUpperCase();
-							var value = Type.createEnum(Architecture, name);
-
-							if (value != null)
-							{
-								overrides.architectures.push(value);
-							}
-						}
-						catch (e:Dynamic) {}
+					    overrides.architectures.push(Architecture.ARM64);
 					}
-					else if (argument == "-64")
+					else if (argument == "-64" || argument == "-x86_64")
 					{
-						overrides.architectures.push(Architecture.X64);
-					}
-					else if (argument == "-32")
-					{
-						overrides.architectures.push(Architecture.X86);
+					    overrides.architectures.push(Architecture.X64);
 					}
 					else if (argument == "-v" || argument == "-verbose")
 					{

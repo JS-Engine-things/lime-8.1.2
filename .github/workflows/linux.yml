@@ -33,7 +33,7 @@ jobs:
         run: haxelib dev lime ${{ github.workspace }}
       - name: Rebuild Lime
         run: |
-          CC=clang-23 CXX=clang++-23 HXCPP_USE_LD="lld-23" haxelib run lime rebuild linux -64 -release -D HXCPP_M64 -D HXCPP_LTO_THIN
+          haxelib run lime rebuild linux -64 -release -D HXCPP_M64 -D HXCPP_LTO_THIN
           haxelib run lime rebuild alias
       - name: Upload Artifact (x86_64)
         uses: actions/upload-artifact@main
@@ -67,7 +67,7 @@ jobs:
         run: haxelib dev lime ${{ github.workspace }}
       - name: Rebuild Lime
         run: |
-          CC=clang-23 CXX=clang++-23 HXCPP_USE_LD="lld-23" haxelib run lime rebuild linux -arm64 -release -D HXCPP_ARM64 -D HXCPP_LTO_THIN
+          haxelib run lime rebuild linux -arm64 -release -D HXCPP_ARM64 -D HXCPP_LTO_THIN
           haxelib run lime rebuild alias
       - name: Upload Artifact
         uses: actions/upload-artifact@main
