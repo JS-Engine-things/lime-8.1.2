@@ -49,8 +49,14 @@ class RunScript
 			// -Dno-compilation so its doesnt print the command itself, stupid haxe
 			System.runCommand(aliasDirectory, "haxe", ["alias.hxml", "-D", architectureDefine, '-D', 'no-compilation']);
 
-			// We need to run this manually now!
-			System.runCommand(Path.combine(aliasDirectory, 'obj'), 'haxelib', ['run', 'hxcpp', 'Build.xml', '-options', 'Options.txt']);
+			var objDir = Path.combine(aliasDirectory, 'obj');
+			var optionsFile = Path.combine(objDir, 'Options.txt');
+
+			System.runCommand(objDir, 'haxelib', [
+			    'run', 'hxcpp',
+			    Path.combine(objDir, 'Build.xml'),
+			    '-options', optionsFile
+			]);
 
 			var aliasOutput:String = Path.combine(aliasDirectory, haxe.io.Path.withExtension("obj/Alias", executableExtension));
 
