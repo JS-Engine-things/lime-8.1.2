@@ -8,7 +8,7 @@ env:
 
 jobs:
   mac:
-    runs-on: macos-26
+    runs-on: macos-15
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -20,7 +20,7 @@ jobs:
         run: echo "HAXEPATH=$HAXE_STD_PATH/.." >> $GITHUB_ENV
       - name: Install Haxe dependencies
         run: |
-          haxelib git hxcpp https://github.com/ShadowEngineTeam/hxcpp --quiet
+          haxelib git hxcpp https://github.com/ShadowEngineTeam/libhxcpp --quiet
           haxelib git format https://github.com/HaxeFoundation/format 9d69fb342d030fa120d2deafafbbffad248332b8 --quiet
           haxelib git hxp https://github.com/openfl/hxp 47ef5ae6569cb0961761a2fbb416694df067124c --quiet
       - name: Enable HXCPP compile cache
@@ -29,14 +29,16 @@ jobs:
         run: haxelib dev lime ${{ github.workspace }}
       - name: Rebuild Lime
         run: |
-          # haxelib run lime rebuild mac -32 -release -nocolor -nocffi -D HXCPP_M32
-          haxelib run lime rebuild mac -64 -release -nocolor -nocffi -D HXCPP_M64
-          haxelib run lime rebuild mac -arm64 -release -nocolor -nocffi -D HXCPP_ARM64
+          haxelib run lime rebuild mac -64 -release -D HXCPP_M64 -D HXCPP_LTO_THIN
+          haxelib run lime rebuild mac -arm64 -release -D HXCPP_ARM64 -D HXCPP_LTO_THIN
+          haxelib run lime rebuild alias -64
+          haxelib run lime rebuild alias -arm64
       - name: Upload Artifact (x86_64)
         uses: actions/upload-artifact@main
         with:
           name: Mac64-NDLL
           path: |
+            templates/bin/alias/Mac64/
             ndll/Mac64/
             !**/.gitignore
             lime.png
@@ -46,6 +48,7 @@ jobs:
         with:
           name: MacArm64-NDLL
           path: |
+            templates/bin/alias/MacArm64/
             ndll/MacArm64/
             !**/.gitignore
             lime.png

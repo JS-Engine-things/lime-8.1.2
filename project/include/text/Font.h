@@ -3,7 +3,7 @@
 
 
 #include <graphics/ImageBuffer.h>
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 #include <system/System.h>
 #include <utils/Resource.h>
 

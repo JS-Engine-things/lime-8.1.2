@@ -1,41 +1,33 @@
-#ifndef LIME_SYSTEM_SENSOR_EVENT_H
-#define LIME_SYSTEM_SENSOR_EVENT_H
+#pragma once
 
-
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 #include <system/ValuePointer.h>
 
+namespace lime
+{
 
-namespace lime {
+	enum SensorEventType
+	{
 
-
-	enum SensorEventType {
-
-		SENSOR_ACCELEROMETER
+		SENSOR_ACCELEROMETER,
+		SENSOR_GYROSCOPE
 
 	};
 
-
-	struct SensorEvent {
-
-		hl_type* t;
+	struct SensorEvent
+	{
 		int id;
 		double x;
 		double y;
 		double z;
 		SensorEventType type;
 
-		static ValuePointer* callback;
-		static ValuePointer* eventObject;
+		static ValuePointer *callback;
+		static ValuePointer *eventObject;
 
-		SensorEvent ();
+		SensorEvent();
 
-		static void Dispatch (SensorEvent* event);
-
+		static void Dispatch(SensorEvent *event);
 	};
 
-
 }
-
-
-#endif

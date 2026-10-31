@@ -5,8 +5,10 @@ class Dependency
 	// TODO: Is "forceLoad" the best name? Implement "whole-archive" on GCC
 	public var embed:Bool;
 	public var forceLoad:Bool;
+	public var allowWebWorkers:Bool;
 	public var name:String;
 	public var path:String;
+	public var type:String;
 
 	public function new(name:String, path:String)
 	{
@@ -19,6 +21,7 @@ class Dependency
 		var dependency = new Dependency(name, path);
 		dependency.embed = embed;
 		dependency.forceLoad = forceLoad;
+		dependency.type = type;
 		return dependency;
 	}
 }

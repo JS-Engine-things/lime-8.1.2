@@ -1,38 +1,37 @@
-#ifndef LIME_UI_DROP_EVENT_H
-#define LIME_UI_DROP_EVENT_H
+#pragma once
 
-
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 #include <system/ValuePointer.h>
 
+namespace lime
+{
 
-namespace lime {
+	enum DropEventType
+	{
 
-
-	enum DropEventType {
-
-		DROP_FILE
+		DROP_FILE,
+		DROP_TEXT,
+		DROP_BEGIN,
+		DROP_COMPLETE,
+		DROP_POSITION
 
 	};
 
-
-	struct DropEvent {
-
-		hl_type* t;
-		vbyte* file;
+	struct DropEvent
+	{
+		char *data;
+		char *source;
+		int windowID;
+		double x;
+		double y;
 		DropEventType type;
 
-		static ValuePointer* callback;
-		static ValuePointer* eventObject;
+		static ValuePointer *callback;
+		static ValuePointer *eventObject;
 
-		DropEvent ();
+		DropEvent();
 
-		static void Dispatch (DropEvent* event);
-
+		static void Dispatch(DropEvent *event);
 	};
 
-
-}
-
-
-#endif
+} // namespace lime

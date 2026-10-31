@@ -1,5 +1,4 @@
-#ifndef LIME_SDL_WINDOW_H
-#define LIME_SDL_WINDOW_H
+#pragma once
 
 
 #include <SDL.h>
@@ -21,7 +20,7 @@ namespace lime {
 			virtual void Alert (const char* message, const char* title);
 			virtual void Close ();
 			virtual void ContextFlip ();
-			virtual void* ContextLock (bool useCFFIValue);
+			virtual void* ContextLock ();
 			virtual void ContextMakeCurrent ();
 			virtual void ContextUnlock ();
 			virtual void Focus ();
@@ -74,6 +73,3 @@ namespace lime {
 
 
 }
-
-
-#endif

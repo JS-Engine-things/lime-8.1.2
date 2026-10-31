@@ -28,11 +28,7 @@ namespace lime {
 	SDL_Cursor* SDLCursor::waitCursor = 0;
 	SDL_Cursor* SDLCursor::waitArrowCursor = 0;
 
-	/*#if defined (IPHONE) || defined (APPLETV)
-	static bool displayModeSet = true;
-	#else*/
 	static bool displayModeSet = false;
-	//#endif
 
 
 	SDLWindow::SDLWindow (Application* application, int width, int height, int flags, const char* title) {
@@ -56,11 +52,7 @@ namespace lime {
 		if (flags & WINDOW_FLAG_MINIMIZED) sdlWindowFlags |= SDL_WINDOW_MINIMIZED;
 		if (flags & WINDOW_FLAG_MAXIMIZED) sdlWindowFlags |= SDL_WINDOW_MAXIMIZED;
 
-		#ifndef EMSCRIPTEN
-		if (flags & WINDOW_FLAG_ALWAYS_ON_TOP) sdlWindowFlags |= SDL_WINDOW_ALWAYS_ON_TOP;
-		#endif
-
-		#if defined (HX_WINDOWS) && defined (NATIVE_TOOLKIT_SDL_ANGLE) && !defined (HX_WINRT)
+		#if defined (HX_WINDOWS) && defined (NATIVE_TOOLKIT_SDL_ANGLE)
 		OSVERSIONINFOEXW osvi = { sizeof (osvi), 0, 0, 0, 0, {0}, 0, 0 };
 		DWORDLONG const dwlConditionMask = VerSetConditionMask (VerSetConditionMask (VerSetConditionMask (0, VER_MAJORVERSION, VER_GREATER_EQUAL), VER_MINORVERSION, VER_GREATER_EQUAL), VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
 		osvi.dwMajorVersion = HIBYTE (_WIN32_WINNT_VISTA);
@@ -74,12 +66,7 @@ namespace lime {
 		}
 		#endif
 
-		#if !defined(EMSCRIPTEN) && !defined(LIME_SWITCH)
-		SDL_SetHint (SDL_HINT_ANDROID_TRAP_BACK_BUTTON, "0");
 		SDL_SetHint (SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-		SDL_SetHint (SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
-		SDL_SetHint (SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
-		#endif
 
 		if (flags & WINDOW_FLAG_HARDWARE) {
 
@@ -96,18 +83,6 @@ namespace lime {
 			SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 			SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
 			SDL_SetHint (SDL_HINT_VIDEO_WIN_D3DCOMPILER, "d3dcompiler_47.dll");
-			#endif
-
-			#if defined (RASPBERRYPI)
-			SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-			SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-			SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
-			SDL_SetHint (SDL_HINT_RENDER_DRIVER, "opengles2");
-			#endif
-
-			#if defined (IPHONE) || defined (APPLETV)
-			SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-			SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 			#endif
 
 			if (flags & WINDOW_FLAG_DEPTH_BUFFER) {
@@ -153,17 +128,6 @@ namespace lime {
 
 		sdlWindow = SDL_CreateWindow (title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, sdlWindowFlags);
 
-		#if defined (IPHONE) || defined (APPLETV)
-		if (sdlWindow && !SDL_GL_CreateContext (sdlWindow)) {
-
-			SDL_DestroyWindow (sdlWindow);
-			SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-
-			sdlWindow = SDL_CreateWindow (title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, sdlWindowFlags);
-
-		}
-		#endif
-
 		if (!sdlWindow) {
 
 			printf ("Could not create SDL window: %s.\n", SDL_GetError ());
@@ -171,7 +135,7 @@ namespace lime {
 
 		}
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+		#if defined (HX_WINDOWS)
 
 		HINSTANCE handle = ::GetModuleHandle (nullptr);
 		HICON icon = ::LoadIcon (handle, MAKEINTRESOURCE (1));
@@ -202,22 +166,6 @@ namespace lime {
 		if (flags & WINDOW_FLAG_HARDWARE) {
 
 			sdlRendererFlags |= SDL_RENDERER_ACCELERATED;
-
-			// if (window->flags & WINDOW_FLAG_VSYNC) {
-
-			#ifdef EMSCRIPTEN
-			sdlRendererFlags |= SDL_RENDERER_PRESENTVSYNC;
-			#endif
-
-			// }
-
-			// sdlRenderer = SDL_CreateRenderer (sdlWindow, -1, sdlRendererFlags);
-
-			// if (sdlRenderer) {
-
-			// 	context = SDL_GL_GetCurrentContext ();
-
-			// }
 
 			context = SDL_GL_CreateContext (sdlWindow);
 
@@ -254,15 +202,6 @@ namespace lime {
 					context = 0;
 
 				}
-
-				#elif defined(IPHONE) || defined(APPLETV)
-
-				// SDL_SysWMinfo windowInfo;
-				// SDL_GetWindowWMInfo (sdlWindow, &windowInfo);
-				// OpenGLBindings::defaultFramebuffer = windowInfo.info.uikit.framebuffer;
-				// OpenGLBindings::defaultRenderbuffer = windowInfo.info.uikit.colorbuffer;
-				glGetIntegerv (GL_FRAMEBUFFER_BINDING, &OpenGLBindings::defaultFramebuffer);
-				glGetIntegerv (GL_RENDERBUFFER_BINDING, &OpenGLBindings::defaultRenderbuffer);
 
 				#endif
 
@@ -396,7 +335,7 @@ namespace lime {
 	}
 
 
-	void* SDLWindow::ContextLock (bool useCFFIValue) {
+	void* SDLWindow::ContextLock () {
 
 		if (sdlRenderer) {
 
@@ -423,61 +362,18 @@ namespace lime {
 			void *pixels;
 			int pitch;
 
-			if (useCFFIValue) {
-
-				if (SDL_LockTexture (sdlTexture, NULL, &pixels, &pitch) == 0) {
-
-					value result = alloc_empty_object ();
-					alloc_field (result, val_id ("width"), alloc_int (contextWidth));
-					alloc_field (result, val_id ("height"), alloc_int (contextHeight));
-					alloc_field (result, val_id ("pixels"), alloc_float ((uintptr_t)pixels));
-					alloc_field (result, val_id ("pitch"), alloc_int (pitch));
-					return result;
-
-				} else {
-
-					return alloc_null ();
-
-				}
-
+			if (SDL_LockTexture (sdlTexture, NULL, &pixels, &pitch) == 0) {
+				value result = alloc_empty_object ();
+				alloc_field (result, val_id ("width"), alloc_int (contextWidth));
+				alloc_field (result, val_id ("height"), alloc_int (contextHeight));
+				alloc_field (result, val_id ("pixels"), alloc_float ((uintptr_t)pixels));
+				alloc_field (result, val_id ("pitch"), alloc_int (pitch));
+				return result;
 			} else {
-
-				const int id_width = hl_hash_utf8 ("width");
-				const int id_height = hl_hash_utf8 ("height");
-				const int id_pixels = hl_hash_utf8 ("pixels");
-				const int id_pitch = hl_hash_utf8 ("pitch");
-
-				if (SDL_LockTexture (sdlTexture, NULL, &pixels, &pitch) == 0) {
-
-					vdynamic* result = (vdynamic*)hl_alloc_dynobj();
-					hl_dyn_seti (result, id_width, &hlt_i32, contextWidth);
-					hl_dyn_seti (result, id_height, &hlt_i32, contextHeight);
-					hl_dyn_setd (result, id_pixels, (uintptr_t)pixels);
-					hl_dyn_seti (result, id_pitch, &hlt_i32, pitch);
-					return result;
-
-				} else {
-
-					return 0;
-
-				}
-
+				return alloc_null();
 			}
-
-		} else {
-
-			if (useCFFIValue) {
-
-				return alloc_null ();
-
-			} else {
-
-				return 0;
-
-			}
-
 		}
-
+		return alloc_null();
 	}
 
 

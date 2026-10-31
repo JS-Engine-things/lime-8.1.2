@@ -1,5 +1,4 @@
-#ifndef LIME_SDL_APPLICATION_H
-#define LIME_SDL_APPLICATION_H
+#pragma once
 
 
 #include <SDL.h>
@@ -7,7 +6,6 @@
 #include <app/ApplicationEvent.h>
 #include <graphics/RenderEvent.h>
 #include <system/ClipboardEvent.h>
-#include <system/OrientationEvent.h>
 #include <system/SensorEvent.h>
 #include <ui/DropEvent.h>
 #include <ui/GamepadEvent.h>
@@ -15,7 +13,6 @@
 #include <ui/KeyEvent.h>
 #include <ui/MouseEvent.h>
 #include <ui/TextEvent.h>
-#include <ui/TouchEvent.h>
 #include <ui/WindowEvent.h>
 #include "SDLWindow.h"
 
@@ -49,7 +46,6 @@ namespace lime {
 			void ProcessMouseEvent (SDL_Event* event);
 			void ProcessSensorEvent (SDL_Event* event);
 			void ProcessTextEvent (SDL_Event* event);
-			void ProcessTouchEvent (SDL_Event* event);
 			void ProcessWindowEvent (SDL_Event* event);
 			int WaitEvent (SDL_Event* event);
 
@@ -71,17 +67,12 @@ namespace lime {
 			JoystickEvent joystickEvent;
 			KeyEvent keyEvent;
 			MouseEvent mouseEvent;
-			OrientationEvent orientationEvent;
 			RenderEvent renderEvent;
 			SensorEvent sensorEvent;
 			TextEvent textEvent;
-			TouchEvent touchEvent;
 			WindowEvent windowEvent;
 
 	};
 
 
 }
-
-
-#endif

@@ -2,6 +2,7 @@
 .DS_Store
 .DS_Store?
 Export/
+templates/bin/alias/*
 project/all_objs
 project/obj
 project/vc*.pdb
@@ -10,6 +11,7 @@ project/vc*.pdb
 .idea/
 *.iml
 tools/obj
+tools/alias/obj
 haxedoc.xml
 docs/*.xml
 docs/xml

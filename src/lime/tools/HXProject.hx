@@ -11,12 +11,8 @@ import lime.tools.Platform;
 import sys.FileSystem;
 import sys.io.File;
 import sys.io.Process;
-#if (haxe_ver >= 4)
 import haxe.xml.Access;
-#else
-import haxe.xml.Fast as Access;
-#end
-#if (lime && lime_cffi && !macro)
+#if (lime_cffi && !macro)
 import lime.text.Font;
 
 @:access(lime.text.Font)
@@ -38,8 +34,7 @@ class HXProject extends Script
 	public var haxelibs:Array<Haxelib>;
 	public var host(get, null):Platform;
 	public var icons:Array<Icon>;
-	public var javaPaths:Array<String>;
-	public var keystore:Keystore;
+	public var adaptiveIcon:AdaptiveIcon;
 	public var languages:Array<String>;
 	public var launchStoryboard:LaunchStoryboard;
 	public var libraries:Array<Library>;
@@ -47,7 +42,6 @@ class HXProject extends Script
 	public var meta:MetaData;
 	public var modules:Map<String, ModuleData>;
 	public var ndlls:Array<NDLL>;
-	public var platformType:PlatformType;
 	public var postBuildCallbacks:Array<CLICommand>;
 	public var preBuildCallbacks:Array<CLICommand>;
 	public var samplePaths:Array<String>;
@@ -96,9 +90,7 @@ class HXProject extends Script
 		Log.verbose = inputData.logVerbose;
 		Log.enableColor = inputData.logEnableColor;
 
-		#if lime
 		System.dryRun = inputData.processDryRun;
-		#end
 
 		Haxelib.debug = inputData.haxelibDebug;
 
@@ -132,34 +124,8 @@ class HXProject extends Script
 		targetFlags = MapTools.copy(_targetFlags);
 		templatePaths = _templatePaths.copy();
 
-		platformType = PlatformType.DESKTOP;
 		architectures = [];
 		excludeArchitectures = [];
-
-		platformType = switch (target)
-		{
-			case AIR if (targetFlags.exists("ios") || targetFlags.exists("android")):
-				PlatformType.MOBILE;
-
-			case FLASH, HTML5, FIREFOX, WEB_ASSEMBLY:
-				PlatformType.WEB;
-
-			case ANDROID, IOS, TVOS:
-				PlatformType.MOBILE;
-
-			case WINDOWS, MAC, LINUX, AIR:
-				PlatformType.DESKTOP;
-
-			default:
-				// TODO: Better handling of platform type for pluggable targets
-				PlatformType.CONSOLE;
-		}
-
-		if (target == WINDOWS && targetFlags.exists("uwp") || targetFlags.exists("winjs"))
-		{
-			targetFlags.set("uwp", "");
-			targetFlags.set("winjs", "");
-		}
 
 		meta = {};
 		app = {};
@@ -189,7 +155,7 @@ class HXProject extends Script
 		else
 		{
 			environment = Sys.environment();
-			for (conflict in ["air", "android", "cpp", "flash", "hl", "html5", "ios", "linux", "mac", "neko", "webassembly", "windows"])
+			for (conflict in ["android", "cpp", "ios", "linux", "mac", "windows"])
 			{
 				environment.remove(conflict);
 			}
@@ -199,7 +165,6 @@ class HXProject extends Script
 		haxeflags = new Array<String>();
 		haxelibs = new Array<Haxelib>();
 		icons = new Array<Icon>();
-		javaPaths = new Array<String>();
 		languages = new Array<String>();
 		libraries = new Array<Library>();
 		libraryHandlers = new Map<String, String>();
@@ -266,11 +231,9 @@ class HXProject extends Script
 			project.icons.push(icon.clone());
 		}
 
-		project.javaPaths = javaPaths.copy();
-
-		if (keystore != null)
+		if (adaptiveIcon != null)
 		{
-			project.keystore = keystore.clone();
+			project.adaptiveIcon = adaptiveIcon.clone();
 		}
 
 		project.languages = languages.copy();
@@ -302,7 +265,6 @@ class HXProject extends Script
 			project.ndlls.push(ndll.clone());
 		}
 
-		project.platformType = platformType;
 		project.postBuildCallbacks = postBuildCallbacks.copy();
 		project.preBuildCallbacks = preBuildCallbacks.copy();
 		project.samplePaths = samplePaths.copy();
@@ -397,10 +359,8 @@ class HXProject extends Script
 
 		var args = [
 			name,
-			#if lime
 			"-lib", "lime",
 			"-lib", "hxp",
-			#end
 			"-cp", tempDirectory,
 			"-cp", Path.combine(Haxelib.getPath(new Haxelib("hxp")), "src")
 		];
@@ -450,7 +410,7 @@ class HXProject extends Script
 
 		try
 		{
-			#if (lime && !eval)
+			#if (!eval)
 			var nekoOutput = Path.combine(tempDirectory, name + ".n");
 			System.runCommand("", "haxe", args.concat(["--main", "lime.tools.HXProject", "-neko", nekoOutput]));
 			System.runCommand("", "neko", [nekoOutput, inputFile, outputFile]);
@@ -526,12 +486,6 @@ class HXProject extends Script
 		{
 			return null;
 		}
-
-		// if (!userDefines.exists (haxelib.name)) {
-		//
-		// userDefines.set (haxelib.name, Haxelib.getVersion (haxelib));
-		//
-		// }
 
 		return HXProject.fromPath(path, userDefines);
 	}
@@ -670,134 +624,30 @@ class HXProject extends Script
 		}
 	}
 
-	// #if lime
 	public function includeXML(xml:String):Void
 	{
 		var projectXML = new ProjectXMLParser();
 		@:privateAccess projectXML.parseXML(new Access(Xml.parse(xml).firstElement()), "");
 		merge(projectXML);
 	}
-	// #end
 
 	private function initializeDefines():Void
 	{
-		switch (platformType)
+		if (Std.string(target).toLowerCase() != Std.string(System.hostPlatform).toLowerCase())
 		{
-			case MOBILE:
-				defines.set("platformType", "mobile");
-				defines.set("mobile", "1");
-
-			case DESKTOP:
-				defines.set("platformType", "desktop");
-				defines.set("desktop", "1");
-
-			case WEB:
-				defines.set("platformType", "web");
-				defines.set("web", "1");
-
-			case CONSOLE:
-				defines.set("platformType", "console");
-				defines.set("console", "1");
-		}
-
-		if (targetFlags.exists("neko"))
-		{
-			defines.set("targetType", "neko");
-			defines.set("native", "1");
-			defines.set("neko", "1");
-		}
-		else if (targetFlags.exists("hl"))
-		{
-			defines.set("targetType", "hl");
-			defines.set("native", "1");
-			defines.set("hl", "1");
-			if (targetFlags.exists("hlc"))
-			{
-				defines.set("hlc", "1");
-			}
-		}
-		else if (targetFlags.exists("java"))
-		{
-			defines.set("targetType", "java");
-			defines.set("native", "1");
-			defines.set("java", "1");
-		}
-		else if (targetFlags.exists("nodejs"))
-		{
-			defines.set("targetType", "nodejs");
-			defines.set("native", "1");
-			defines.set("nodejs", "1");
-		}
-		else if (targetFlags.exists("cs"))
-		{
-			defines.set("targetType", "cs");
-			defines.set("native", "1");
-			defines.set("cs", "1");
-		}
-		else if (target == Platform.FIREFOX)
-		{
-			defines.set("targetType", "js");
-			defines.set("html5", "1");
-		}
-		else if (target == Platform.AIR)
-		{
-			defines.set("targetType", "swf");
-			defines.set("flash", "1");
-			if (targetFlags.exists("ios")) defines.set("ios", "1");
-			if (targetFlags.exists("android")) defines.set("android", "1");
-		}
-		else if (target == Platform.WINDOWS && (targetFlags.exists("uwp") || targetFlags.exists("winjs")))
-		{
-			targetFlags.set("uwp", "");
-			targetFlags.set("winjs", "");
-
-			defines.set("targetType", "js");
-			defines.set("html5", "1");
-			defines.set("uwp", "1");
-			defines.set("winjs", "1");
-		}
-		else if (platformType == DESKTOP && target != cast System.hostPlatform)
-		{
-			defines.set("native", "1");
-
-			if (target == Platform.LINUX && targetFlags.exists("cpp"))
+			if (target == Platform.WINDOWS && (targetFlags.exists("cpp") || targetFlags.exists("mingw")))
 			{
 				defines.set("targetType", "cpp");
-				defines.set("cpp", "1");
-			}
-			else if (target == Platform.WINDOWS && (targetFlags.exists("cpp") || targetFlags.exists("mingw")))
-			{
-				defines.set("targetType", "cpp");
+				defines.set("native", "1");
 				defines.set("cpp", "1");
 				defines.set("mingw", "1");
 			}
-			else
-			{
-				targetFlags.set("neko", "1");
-
-				defines.set("targetType", "neko");
-				defines.set("neko", "1");
-			}
 		}
-		else if (target == Platform.WEB_ASSEMBLY)
-		{
-			defines.set("webassembly", "1");
-			defines.set("wasm", "1");
-			defines.set("emscripten", "1");
-			defines.set("targetType", "cpp");
-			defines.set("native", "1");
-			defines.set("cpp", "1");
-		}
-		else if (targetFlags.exists("cpp")
-			|| ((platformType != PlatformType.WEB) && !targetFlags.exists("html5")))
+		else if (targetFlags.exists("cpp"))
 		{
 			defines.set("targetType", "cpp");
 			defines.set("native", "1");
 			defines.set("cpp", "1");
-		}
-		else if (target == Platform.FLASH)
-		{
-			defines.set("targetType", "swf");
 		}
 
 		if (debug)
@@ -821,11 +671,6 @@ class HXProject extends Script
 			defines.set("static_link", "1");
 		}
 
-		if (defines.exists("SWF_PLAYER"))
-		{
-			environment.set("SWF_PLAYER", defines.get("SWF_PLAYER"));
-		}
-
 		defines.set(Std.string(target).toLowerCase(), "1");
 		defines.set("target", Std.string(target).toLowerCase());
 		defines.set("platform", defines.get("target"));
@@ -841,10 +686,7 @@ class HXProject extends Script
 			default:
 				defines.set("host", "unknown");
 		}
-
-		#if lime
 		defines.set("lime-tools", "1");
-		#end
 
 		defines.set("hxp", "1"); // TODO: Version?
 	}
@@ -907,15 +749,10 @@ class HXProject extends Script
 			haxeflags = ArrayTools.concatUnique(haxeflags, project.haxeflags);
 			haxelibs = ArrayTools.concatUnique(haxelibs, project.haxelibs, true, "name");
 			icons = ArrayTools.concatUnique(icons, project.icons);
-			javaPaths = ArrayTools.concatUnique(javaPaths, project.javaPaths, true);
 
-			if (keystore == null)
+			if (project.adaptiveIcon != null)
 			{
-				keystore = project.keystore;
-			}
-			else
-			{
-				keystore.merge(project.keystore);
+				adaptiveIcon = project.adaptiveIcon;
 			}
 
 			if (launchStoryboard == null)
@@ -1157,15 +994,9 @@ class HXProject extends Script
 				ObjectTools.copyFields(asset, embeddedAsset);
 
 				embeddedAsset.sourcePath = Path.standardize(asset.sourcePath);
-
-				if (asset.embed == null)
-				{
-					embeddedAsset.embed = (platformType == PlatformType.WEB || target == AIR);
-				}
-
 				embeddedAsset.type = Std.string(asset.type).toLowerCase();
 
-				#if (lime && lime_cffi && !macro)
+				#if (lime_cffi && !macro)
 				if (asset.type == FONT)
 				{
 					try
@@ -1215,9 +1046,6 @@ class HXProject extends Script
 			templateNDLL.nameSafe = StringTools.replace(ndll.name, "-", "_");
 			context.ndlls.push(templateNDLL);
 		}
-
-		// Reflect.setField (context, "ndlls", ndlls);
-		// Reflect.setField (context, "sslCaCert", sslCaCert);
 		context.sslCaCert = "";
 
 		var compilerFlags = [];
@@ -1234,8 +1062,6 @@ class HXProject extends Script
 			{
 				name += ":" + version;
 			}
-
-			// #if lime
 
 			if (Haxelib.pathOverrides.exists(name))
 			{
@@ -1318,17 +1144,6 @@ class HXProject extends Script
 								{
 									compilerFlags = ArrayTools.concatUnique(compilerFlags, ["-D " + name], true);
 								}
-
-								/*var haxelib = new Haxelib (arg.substr (3));
-									var path = Haxelib.getPath (haxelib);
-									var version = getHaxelibVersion (haxelib);
-
-									if (path != null) {
-
-										CompatibilityHelper.patchProject (this, haxelib, version);
-										compilerFlags = ArrayTools.concatUnique (compilerFlags, [ "-D " + haxelib.name + "=" + version ], true);
-
-								}*/
 							}
 							else if (!StringTools.startsWith(arg, "-L"))
 							{
@@ -1338,12 +1153,6 @@ class HXProject extends Script
 					}
 				}
 			}
-
-			// #else
-
-			// compilerFlags.push ("-lib " + name);
-
-			// #end
 
 			Reflect.setField(context, "LIB_" + StringTools.formatUppercaseVariable(haxelib.name), true);
 
@@ -1392,13 +1201,7 @@ class HXProject extends Script
 				Reflect.setField(context, "DEFINE_" + StringTools.formatUppercaseVariable(key), value);
 			}
 		}
-
-		if (target != Platform.FLASH)
-		{
-			compilerFlags.push("-D " + Std.string(target).toLowerCase());
-		}
-
-		compilerFlags.push("-D " + Std.string(platformType).toLowerCase());
+		compilerFlags.push("-D " + Std.string(target).toLowerCase());
 		compilerFlags = compilerFlags.concat(haxeflags);
 
 		if (compilerFlags.length == 0)
@@ -1448,39 +1251,7 @@ class HXProject extends Script
 		context.RELEASE = (type == "release");
 		context.DEBUG = debug;
 		context.FINAL = (type == "final");
-		context.SWF_VERSION = app.swfVersion;
 		context.PRELOADER_NAME = app.preloader;
-
-		if (keystore != null)
-		{
-			if (keystore.path != null)
-			{
-				context.KEY_STORE = Path.tryFullPath(keystore.path);
-			}
-
-			if (keystore.password != null)
-			{
-				context.KEY_STORE_PASSWORD = keystore.password;
-			}
-
-			if (keystore.alias != null)
-			{
-				context.KEY_STORE_ALIAS = keystore.alias;
-			}
-			else if (keystore.path != null)
-			{
-				context.KEY_STORE_ALIAS = Path.withoutExtension(Path.withoutDirectory(keystore.path));
-			}
-
-			if (keystore.aliasPassword != null)
-			{
-				context.KEY_STORE_ALIAS_PASSWORD = keystore.aliasPassword;
-			}
-			else if (keystore.password != null)
-			{
-				context.KEY_STORE_ALIAS_PASSWORD = keystore.password;
-			}
-		}
 
 		context.config = config;
 

@@ -1,41 +1,7 @@
 #ifndef LIME_GRAPHICS_OPENGL_OPENGL_H
 #define LIME_GRAPHICS_OPENGL_OPENGL_H
 
-
-#if defined (ANDROID)  || defined (RASPBERRYPI)
-
-#define LIME_GLES
-//#include <GLES3/gl3.h>
-//#define __gl2_h_
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
-#elif defined (EMSCRIPTEN)
-
-#define LIME_GLES
-// #define LIME_GLES3_API
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
-#elif defined (TIZEN)
-
-#define LIME_GLES
-#define LIME_GLES3_API
-#include <gl3.h>
-#include <gl3ext.h>
-
-#elif defined (IPHONE) || defined(APPLETV)
-
-#define LIME_GLES
-#define LIME_GLES3_API
-// #include <OpenGLES/ES1/gl.h>
-// #include <OpenGLES/ES1/glext.h>
-// #include <OpenGLES/ES2/gl.h>
-// #include <OpenGLES/ES2/glext.h>
-#include <OpenGLES/ES3/gl.h>
-#include <OpenGLES/ES3/glext.h>
-
-#elif defined (HX_LINUX)
+#if defined (HX_LINUX)
 
 #define LIME_GLES3_API
 #define NEED_EXTENSIONS

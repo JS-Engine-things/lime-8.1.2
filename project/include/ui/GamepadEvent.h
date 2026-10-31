@@ -1,15 +1,13 @@
-#ifndef LIME_UI_GAMEPAD_EVENT_H
-#define LIME_UI_GAMEPAD_EVENT_H
+#pragma once
 
-
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 #include <system/ValuePointer.h>
 
+namespace lime
+{
 
-namespace lime {
-
-
-	enum GamepadEventType {
+	enum GamepadEventType
+	{
 
 		GAMEPAD_AXIS_MOVE,
 		GAMEPAD_BUTTON_DOWN,
@@ -19,27 +17,21 @@ namespace lime {
 
 	};
 
-
-	struct GamepadEvent {
-
-		hl_type* t;
+	struct GamepadEvent
+	{
 		int axis;
 		int button;
 		int id;
 		GamepadEventType type;
 		double axisValue;
+		double timestamp;
 
-		static ValuePointer* callback;
-		static ValuePointer* eventObject;
+		static ValuePointer *callback;
+		static ValuePointer *eventObject;
 
-		GamepadEvent ();
+		GamepadEvent();
 
-		static void Dispatch (GamepadEvent* event);
-
+		static void Dispatch(GamepadEvent *event);
 	};
 
-
-}
-
-
-#endif
+} // namespace lime

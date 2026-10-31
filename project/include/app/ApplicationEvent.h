@@ -1,39 +1,31 @@
-#ifndef LIME_APP_APPLICATION_EVENT_H
-#define LIME_APP_APPLICATION_EVENT_H
+#pragma once
 
-
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 #include <system/ValuePointer.h>
 
+namespace lime
+{
 
-namespace lime {
+	enum ApplicationEventType
+	{
 
-
-	enum ApplicationEventType {
-
+		THEME_CHANGE,
 		UPDATE,
 		EXIT
 
 	};
 
-
-	struct ApplicationEvent {
-
-		hl_type* t;
+	struct ApplicationEvent
+	{
 		double deltaTime;
 		ApplicationEventType type;
 
-		static ValuePointer* callback;
-		static ValuePointer* eventObject;
+		static ValuePointer *callback;
+		static ValuePointer *eventObject;
 
-		ApplicationEvent ();
+		ApplicationEvent();
 
-		static void Dispatch (ApplicationEvent* event);
-
+		static void Dispatch(ApplicationEvent *event);
 	};
 
-
-}
-
-
-#endif
+} // namespace lime

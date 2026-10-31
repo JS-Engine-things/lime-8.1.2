@@ -77,8 +77,7 @@ class ProjectHelper
 		}
 	}
 
-	public static function recursiveSmartCopyTemplate(project:HXProject, source:String, destination:String, context:Dynamic = null, process:Bool = true,
-			warnIfNotFound:Bool = true)
+	public static function recursiveSmartCopyTemplate(project:HXProject, source:String, destination:String, context:Dynamic = null, process:Bool = true, warnIfNotFound:Bool = true)
 	{
 		var destinations = [];
 		var paths = System.findTemplateRecursive(project.templatePaths, source, warnIfNotFound, destinations);

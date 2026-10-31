@@ -11,8 +11,6 @@ import lime.media.AudioManager;
 import lime.system.Clipboard;
 import lime.system.Display;
 import lime.system.DisplayMode;
-import lime.system.JNI;
-import lime.system.Orientation;
 import lime.system.Sensor;
 import lime.system.SensorType;
 import lime.system.System;
@@ -21,13 +19,8 @@ import lime.ui.Joystick;
 import lime.ui.JoystickHatPosition;
 import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
-import lime.ui.Touch;
 import lime.ui.Window;
 
-#if !lime_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(haxe.Timer)
 @:access(lime._internal.backend.native.NativeCFFI)
 @:access(lime._internal.backend.native.NativeOpenGLRenderContext)
@@ -45,25 +38,17 @@ class NativeApplication
 {
 	private var applicationEventInfo = new ApplicationEventInfo(UPDATE);
 	private var clipboardEventInfo = new ClipboardEventInfo();
-	private var currentTouches = new Map<Int, Touch>();
 	private var dropEventInfo = new DropEventInfo();
 	private var gamepadEventInfo = new GamepadEventInfo();
 	private var joystickEventInfo = new JoystickEventInfo();
 	private var keyEventInfo = new KeyEventInfo();
-	private var orientationEventInfo = new OrientationEventInfo();
 	private var mouseEventInfo = new MouseEventInfo();
 	private var renderEventInfo = new RenderEventInfo(RENDER);
 	private var sensorEventInfo = new SensorEventInfo();
 	private var textEventInfo = new TextEventInfo();
-	private var touchEventInfo = new TouchEventInfo();
-	private var unusedTouchesPool = new List<Touch>();
 	private var windowEventInfo = new WindowEventInfo();
 
 	public var handle:Dynamic;
-
-	#if android
-	private var deviceOrientationListener:OrientationChangeListener;
-	#end
 
 	private var pauseTimer:Int;
 	private var parent:Application;
@@ -83,17 +68,6 @@ class NativeApplication
 		toggleFullscreen = true;
 
 		AudioManager.init();
-
-		#if (ios || android || tvos)
-		Sensor.registerSensor(SensorType.ACCELEROMETER, 0);
-		#end
-
-		#if android
-		var setDeviceOrientationListener = JNI.createStaticMethod("org/haxe/lime/GameActivity", "setDeviceOrientationListener",
-			"(Lorg/haxe/lime/HaxeObject;)V");
-		deviceOrientationListener = new OrientationChangeListener(handleJNIOrientationEvent);
-		setDeviceOrientationListener(deviceOrientationListener);
-		#end
 
 		#if (!macro && lime_cffi)
 		handle = NativeCFFI.lime_application_create();
@@ -128,45 +102,14 @@ class NativeApplication
 		NativeCFFI.lime_mouse_event_manager_register(handleMouseEvent, mouseEventInfo);
 		NativeCFFI.lime_render_event_manager_register(handleRenderEvent, renderEventInfo);
 		NativeCFFI.lime_text_event_manager_register(handleTextEvent, textEventInfo);
-		NativeCFFI.lime_touch_event_manager_register(handleTouchEvent, touchEventInfo);
 		NativeCFFI.lime_window_event_manager_register(handleWindowEvent, windowEventInfo);
-		#if (ios || android)
-		NativeCFFI.lime_orientation_event_manager_register(handleOrientationEvent, orientationEventInfo);
-		#end
-		#if (ios || android || tvos)
-		NativeCFFI.lime_sensor_event_manager_register(handleSensorEvent, sensorEventInfo);
-		#end
 		#end
 
-		#if (nodejs && lime_cffi)
-		NativeCFFI.lime_application_init(handle);
-
-		var eventLoop = function()
-		{
-			var active = NativeCFFI.lime_application_update(handle);
-
-			if (!active)
-			{
-				untyped process.exitCode = NativeCFFI.lime_application_quit(handle);
-				parent.onExit.dispatch(untyped process.exitCode);
-			}
-			else
-			{
-				untyped setImmediate(eventLoop);
-			}
-		}
-
-		untyped setImmediate(eventLoop);
-		return 0;
-		#elseif lime_cffi
 		var result = NativeCFFI.lime_application_exec(handle);
 
-		#if (!webassembly && !ios && !nodejs)
 		parent.onExit.dispatch(result);
-		#end
 
 		return result;
-		#end
 		#end
 
 		return 0;
@@ -178,15 +121,6 @@ class NativeApplication
 
 		#if (!macro && lime_cffi)
 		NativeCFFI.lime_application_quit(handle);
-		#end
-	}
-
-	public function getDeviceOrientation():Orientation
-	{
-		#if (!macro && lime_cffi)
-		return cast NativeCFFI.lime_system_get_device_orientation();
-		#else
-		return UNKNOWN;
 		#end
 	}
 
@@ -291,16 +225,6 @@ class NativeApplication
 				case KEY_UP:
 					window.onKeyUp.dispatch(keyCode, modifier);
 			}
-
-			#if android
-			if (keyCode == APP_CONTROL_BACK && modifier == KeyModifier.NONE && type == KEY_UP && !window.onKeyUp.canceled)
-			{
-				var mainActivity = JNI.createStaticField("org/haxe/extension/Extension", "mainActivity", "Landroid/app/Activity;");
-				var moveTaskToBack = JNI.createMemberMethod("android/app/Activity", "moveTaskToBack", "(Z)Z");
-
-				moveTaskToBack(mainActivity.get(), true);
-			}
-			#end
 		}
 	}
 
@@ -333,27 +257,6 @@ class NativeApplication
 			}
 		}
 	}
-
-	private function handleOrientationEvent():Void
-	{
-		var orientation:Orientation = cast orientationEventInfo.orientation;
-		var display = orientationEventInfo.display;
-		switch (orientationEventInfo.type)
-		{
-			case DISPLAY_ORIENTATION_CHANGE:
-				parent.onDisplayOrientationChange.dispatch(display, orientation);
-			case DEVICE_ORIENTATION_CHANGE:
-				parent.onDeviceOrientationChange.dispatch(orientation);
-		}
-	}
-
-	#if android
-	private function handleJNIOrientationEvent(newOrientation:Int):Void
-	{
-		var orientation:Orientation = cast newOrientation;
-		parent.onDeviceOrientationChange.dispatch(orientation);
-	}
-	#end
 
 	private function handleRenderEvent():Void
 	{
@@ -437,68 +340,6 @@ class NativeApplication
 
 				default:
 			}
-		}
-	}
-
-	private function handleTouchEvent():Void
-	{
-		switch (touchEventInfo.type)
-		{
-			case TOUCH_START:
-				var touch = unusedTouchesPool.pop();
-
-				if (touch == null)
-				{
-					touch = new Touch(touchEventInfo.x, touchEventInfo.y, touchEventInfo.id, touchEventInfo.dx, touchEventInfo.dy, touchEventInfo.pressure,
-						touchEventInfo.device);
-				}
-				else
-				{
-					touch.x = touchEventInfo.x;
-					touch.y = touchEventInfo.y;
-					touch.id = touchEventInfo.id;
-					touch.dx = touchEventInfo.dx;
-					touch.dy = touchEventInfo.dy;
-					touch.pressure = touchEventInfo.pressure;
-					touch.device = touchEventInfo.device;
-				}
-
-				currentTouches.set(touch.id, touch);
-
-				Touch.onStart.dispatch(touch);
-
-			case TOUCH_END:
-				var touch = currentTouches.get(touchEventInfo.id);
-
-				if (touch != null)
-				{
-					touch.x = touchEventInfo.x;
-					touch.y = touchEventInfo.y;
-					touch.dx = touchEventInfo.dx;
-					touch.dy = touchEventInfo.dy;
-					touch.pressure = touchEventInfo.pressure;
-
-					Touch.onEnd.dispatch(touch);
-
-					currentTouches.remove(touchEventInfo.id);
-					unusedTouchesPool.add(touch);
-				}
-
-			case TOUCH_MOVE:
-				var touch = currentTouches.get(touchEventInfo.id);
-
-				if (touch != null)
-				{
-					touch.x = touchEventInfo.x;
-					touch.y = touchEventInfo.y;
-					touch.dx = touchEventInfo.dx;
-					touch.dy = touchEventInfo.dy;
-					touch.pressure = touchEventInfo.pressure;
-
-					Touch.onMove.dispatch(touch);
-				}
-
-			default:
 		}
 	}
 
@@ -902,42 +743,6 @@ class NativeApplication
 	var TEXT_EDIT = 1;
 }
 
-@:keep /*private*/ class TouchEventInfo
-{
-	public var device:Int;
-	public var dx:Float;
-	public var dy:Float;
-	public var id:Int;
-	public var pressure:Float;
-	public var type:TouchEventType;
-	public var x:Float;
-	public var y:Float;
-
-	public function new(type:TouchEventType = null, x:Float = 0, y:Float = 0, id:Int = 0, dx:Float = 0, dy:Float = 0, pressure:Float = 0, device:Int = 0)
-	{
-		this.type = type;
-		this.x = x;
-		this.y = y;
-		this.id = id;
-		this.dx = dx;
-		this.dy = dy;
-		this.pressure = pressure;
-		this.device = device;
-	}
-
-	public function clone():TouchEventInfo
-	{
-		return new TouchEventInfo(type, x, y, id, dx, dy, pressure, device);
-	}
-}
-
-#if (haxe_ver >= 4.0) private enum #else @:enum private #end abstract TouchEventType(Int)
-{
-	var TOUCH_START = 0;
-	var TOUCH_END = 1;
-	var TOUCH_MOVE = 2;
-}
-
 @:keep /*private*/ class WindowEventInfo
 {
 	public var height:Int;
@@ -980,47 +785,4 @@ class NativeApplication
 	var WINDOW_RESTORE = 12;
 	var WINDOW_SHOW = 13;
 	var WINDOW_HIDE = 14;
-}
-
-@:keep /*private*/ class OrientationEventInfo
-{
-	public var orientation:Int;
-	public var display:Int;
-	public var type:OrientationEventType;
-
-	public function new(type:OrientationEventType = null, orientation:Int = 0, display:Int = -1)
-	{
-		this.type = type;
-		this.orientation = orientation;
-		this.display = display;
-	}
-
-	public function clone():OrientationEventInfo
-	{
-		return new OrientationEventInfo(type, orientation, display);
-	}
-}
-
-#if (haxe_ver >= 4.0) private enum #else @:enum private #end abstract OrientationEventType(Int)
-{
-	var DISPLAY_ORIENTATION_CHANGE = 0;
-	var DEVICE_ORIENTATION_CHANGE = 1;
-}
-
-private class OrientationChangeListener #if (android && !macro) implements JNISafety #end
-{
-	private var callback:Int->Void;
-
-	public function new(callback:Int->Void)
-	{
-		this.callback = callback;
-	}
-
-	#if (android && !macro)
-	@:runOnMainThread
-	#end
-	public function onOrientationChanged(orientation:Int):Void
-	{
-		callback(orientation);
-	}
 }
