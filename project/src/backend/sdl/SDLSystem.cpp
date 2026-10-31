@@ -47,7 +47,6 @@ namespace lime {
 	static int id_dpi;
 	static int id_height;
 	static int id_name;
-	static int id_orientation;
 	static int id_pixelFormat;
 	static int id_refreshRate;
 	static int id_supportedModes;
@@ -258,8 +257,6 @@ namespace lime {
 
 		alloc_field(display, val_id("dpi"), alloc_float(dpi));
 
-		alloc_field(display, val_id("orientation"), alloc_int((int)SDL_GetCurrentDisplayOrientation(id)));
-
 		DisplayMode mode;
 
 		mode.height = displayMode->h;
@@ -368,29 +365,6 @@ namespace lime {
 
 	}
 
-	int System::GetDisplayOrientation(int displayIndex) {
-		int orientation = 0;
-		switch(SDL_GetDisplayOrientation(displayIndex)) {
-			case SDL_ORIENTATION_UNKNOWN:
-				orientation = 0;
-				break;
-			case SDL_ORIENTATION_LANDSCAPE:
-				orientation = 1;
-				break;
-			case SDL_ORIENTATION_LANDSCAPE_FLIPPED:
-				orientation = 2;
-				break;
-			case SDL_ORIENTATION_PORTRAIT:
-				orientation = 3;
-				break;
-			case SDL_ORIENTATION_PORTRAIT_FLIPPED:
-				orientation = 4;
-				break;
-		}
-
-		return orientation;
-	}
-
 
 	FILE* FILE_HANDLE::getFile () {
 
@@ -401,20 +375,6 @@ namespace lime {
 			case SDL_RWOPS_STDFILE:
 
 				return ((SDL_RWops*)handle)->hidden.stdio.fp;
-
-			case SDL_RWOPS_WINFILE:
-			{
-				/*#ifdef HX_WINDOWS
-				printf("SDKFLJDSLFKJ\n");
-				int fd = _open_osfhandle ((uintptr_t)((SDL_RWops*)handle)->hidden.windowsio.h, _O_RDONLY);
-
-				if (fd != -1) {
-					printf("SDKFLJDSLFKJ\n");
-					return ::fdopen (fd, "rb");
-
-				}
-				#endif*/
-			}
 
 		}
 
