@@ -4,7 +4,7 @@
 
 #include <graphics/ImageBuffer.h>
 #include <math/Rectangle.h>
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 
 
 namespace lime {

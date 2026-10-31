@@ -3,6 +3,7 @@
 
 
 #include <utils/QuickVec.h>
+#include <hx/CFFIPrime.h>
 
 
 namespace lime {

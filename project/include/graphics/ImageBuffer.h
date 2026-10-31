@@ -3,7 +3,7 @@
 
 
 #include <graphics/PixelFormat.h>
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 #include <utils/ArrayBufferView.h>
 
 

@@ -2,7 +2,7 @@
 #define LIME_MATH_RECTANGLE_H
 
 
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 
 
 namespace lime {

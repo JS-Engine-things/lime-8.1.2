@@ -1,5 +1,6 @@
 #include <math/ColorMatrix.h>
 #include <utils/Bytes.h>
+#include <hx/CFFIPrime.h>
 
 
 namespace lime {

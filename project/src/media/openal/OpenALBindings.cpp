@@ -5,6 +5,7 @@
 #include "AL/alext.h"
 #endif
 
+#include <hx/CFFIPrime.h>
 #include <system/CFFIPointer.h>
 #include <system/Mutex.h>
 #include <utils/ArrayBufferView.h>

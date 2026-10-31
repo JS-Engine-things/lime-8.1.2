@@ -2,7 +2,7 @@
 #define LIME_APP_APPLICATION_EVENT_H
 
 
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 #include <system/ValuePointer.h>
 
 

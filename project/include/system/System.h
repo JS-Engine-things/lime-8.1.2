@@ -34,10 +34,6 @@ namespace lime {
 			static std::wstring* GetDeviceVendor ();
 			static std::wstring* GetDirectory (SystemDirectory type, const char* company, const char* title);
 			static void* GetDisplay (bool useCFFIValue, int id);
-			#ifdef IPHONE
-			static std::wstring* GetIOSDirectory (SystemDirectory type);
-			static bool GetIOSTablet ();
-			#endif
 			static int GetNumDisplays ();
 			static int GetDeviceOrientation ();
 			static std::wstring* GetPlatformLabel ();
@@ -46,14 +42,14 @@ namespace lime {
 			static double GetTimer ();
 			static double GetPerformanceCounter ();
 			static double GetPerformanceFrequency ();
-			#if defined(HX_WINDOWS) && !defined (HX_WINRT)
+			#if defined(HX_WINDOWS)
 			static int GetWindowsConsoleMode (int handleType);
 			#endif
 			static void OpenFile (const char* path);
 			static void OpenURL (const char* url, const char* target);
 			static bool SetAllowScreenTimeout (bool allow);
 			static int GetDisplayOrientation (int displayIndex);
-			#if defined(HX_WINDOWS) && !defined (HX_WINRT)
+			#if defined(HX_WINDOWS)
 			static bool SetWindowsConsoleMode (int handleType, int mode);
 			#endif
 			static void EnableDeviceOrientationChange(bool enable);
@@ -348,13 +344,6 @@ typedef uint64_t  uintmax_t;
 
 #endif // _MSC_STDINT_H_ ]
 #endif
-#endif
-
-
-#if defined(ANDROID) && !defined(HXCPP_CLANG)
-
-std::size_t _mbsrtowcs(wchar_t * ws, const char **src, std::size_t wn, std::mbstate_t *st);
-
 #endif
 
 

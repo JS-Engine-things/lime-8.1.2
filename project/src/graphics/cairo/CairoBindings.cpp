@@ -3,6 +3,7 @@
 #include <map>
 #include <math/Matrix3.h>
 #include <math/Vector2.h>
+#include <hx/CFFIPrime.h>
 #include <system/CFFIPointer.h>
 #include <system/Mutex.h>
 #include <system/ValuePointer.h>

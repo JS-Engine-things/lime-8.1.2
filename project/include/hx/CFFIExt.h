@@ -1,7 +1,7 @@
 #ifndef HX_CFFIEXT_INCLUDED
 #define HX_CFFIEXT_INCLUDED
 
-#include <hx/CFFI.h>
+#include <hx/CFFIPrime.h>
 
 #if defined(STATIC_LINK) && defined(IMPLEMENT_CFFI_EXT)
 void *LoadFunc(const char *inName) { return 0; }

@@ -1,4 +1,5 @@
 #include <math/Rectangle.h>
+#include <hx/CFFIPrime.h>
 
 
 namespace lime {

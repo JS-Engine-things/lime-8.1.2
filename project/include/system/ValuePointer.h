@@ -1,6 +1,8 @@
 #ifndef LIME_SYSTEM_VALUE_POINTER_H
 #define LIME_SYSTEM_VALUE_POINTER_H
 
+#include <hx/CFFIPrime.h>
+
 
 namespace lime {
 
