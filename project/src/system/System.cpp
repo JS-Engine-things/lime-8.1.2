@@ -1,3 +1,8 @@
+#include <graphics/PixelFormat.h>
+#include <math/Rectangle.h>
+#include <system/DisplayMode.h>
+#include <system/System.h>
+
 #ifdef HX_WINDOWS
 #define _WIN32_DCOM
 #include <iostream>
@@ -201,7 +206,6 @@ namespace lime {
 	#endif
 
 }
-#endif
 
 
 #ifdef HX_LINUX
