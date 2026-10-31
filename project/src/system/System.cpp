@@ -200,17 +200,6 @@ namespace lime {
 	}
 	#endif
 
-	// I feel like this could be used for something else possibly...
-	int System::GetDeviceOrientation () {
-
-		return 0; // SDL_ORIENTATION_UNKNOWN
-
-	}
-
-	void System::EnableDeviceOrientationChange (bool enable) {
-
-	}
-
 }
 #endif
 

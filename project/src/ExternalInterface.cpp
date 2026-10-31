@@ -18,7 +18,6 @@
 #include <system/ClipboardEvent.h>
 #include <system/Endian.h>
 #include <system/FileWatcher.h>
-#include <system/Locale.h>
 #include <system/OrientationEvent.h>
 #include <system/SensorEvent.h>
 #include <system/System.h>
@@ -42,7 +41,6 @@
 #include <utils/compress/Zlib.h>
 
 #ifdef HX_WINDOWS
-#include <locale>
 #include <codecvt>
 #endif
 
@@ -1354,25 +1352,6 @@ namespace lime {
 	}
 
 
-	value lime_locale_get_system_locale () {
-
-		std::string* locale = Locale::GetSystemLocale ();
-
-		if (!locale) {
-
-			return alloc_null ();
-
-		} else {
-
-			value result = alloc_string (locale->c_str ());
-			delete locale;
-			return result;
-
-		}
-
-	}
-
-
 	value lime_lzma_compress (value buffer, value bytes) {
 
 		#ifdef LIME_LZMA
@@ -1546,27 +1525,9 @@ namespace lime {
 	}
 
 
-	bool lime_system_get_ios_tablet () {
-
-		#ifdef IPHONE
-		return System::GetIOSTablet ();
-		#else
-		return false;
-		#endif
-
-	}
-
-
 	int lime_system_get_num_displays () {
 
 		return System::GetNumDisplays ();
-
-	}
-
-
-	int lime_system_get_device_orientation () {
-
-		return System::GetDeviceOrientation();
 
 	}
 
@@ -1682,16 +1643,10 @@ namespace lime {
 
 	}
 
-	int lime_system_get_display_orientation (int displayIndex) {
-
-		return System::GetDisplayOrientation (displayIndex);
-
-	}
-
 
 	bool lime_system_set_windows_console_mode (int handleType, int mode) {
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+		#if defined (HX_WINDOWS)
 		return System::SetWindowsConsoleMode (handleType, mode);
 		#else
 		return false;
@@ -2211,7 +2166,6 @@ namespace lime {
 	DEFINE_PRIME1 (lime_key_code_from_scan_code);
 	DEFINE_PRIME1 (lime_key_code_to_scan_code);
 	DEFINE_PRIME2v (lime_key_event_manager_register);
-	DEFINE_PRIME0 (lime_locale_get_system_locale);
 	DEFINE_PRIME2 (lime_lzma_compress);
 	DEFINE_PRIME2 (lime_lzma_decompress);
 	DEFINE_PRIME2v (lime_mouse_event_manager_register);
@@ -2225,9 +2179,7 @@ namespace lime {
 	DEFINE_PRIME0 (lime_system_get_device_vendor);
 	DEFINE_PRIME3 (lime_system_get_directory);
 	DEFINE_PRIME1 (lime_system_get_display);
-	DEFINE_PRIME0 (lime_system_get_ios_tablet);
 	DEFINE_PRIME0 (lime_system_get_num_displays);
-	DEFINE_PRIME0 (lime_system_get_device_orientation);
 	DEFINE_PRIME0 (lime_system_get_platform_label);
 	DEFINE_PRIME0 (lime_system_get_platform_name);
 	DEFINE_PRIME0 (lime_system_get_platform_version);
@@ -2238,7 +2190,6 @@ namespace lime {
 	DEFINE_PRIME1v (lime_system_open_file);
 	DEFINE_PRIME2v (lime_system_open_url);
 	DEFINE_PRIME1 (lime_system_set_allow_screen_timeout);
-	DEFINE_PRIME1 (lime_system_get_display_orientation);
 	DEFINE_PRIME2 (lime_system_set_windows_console_mode);
 	DEFINE_PRIME2v (lime_text_event_manager_register);
 	DEFINE_PRIME2v (lime_touch_event_manager_register);
