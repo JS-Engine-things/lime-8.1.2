@@ -363,22 +363,17 @@ namespace lime {
 			int pitch;
 
 			if (SDL_LockTexture (sdlTexture, NULL, &pixels, &pitch) == 0) {
-
 				value result = alloc_empty_object ();
 				alloc_field (result, val_id ("width"), alloc_int (contextWidth));
 				alloc_field (result, val_id ("height"), alloc_int (contextHeight));
 				alloc_field (result, val_id ("pixels"), alloc_float ((uintptr_t)pixels));
 				alloc_field (result, val_id ("pitch"), alloc_int (pitch));
 				return result;
-
 			} else {
-
-				return alloc_null ();
-
+				return alloc_null();
 			}
-
 		}
-
+		return alloc_null();
 	}
 
 
