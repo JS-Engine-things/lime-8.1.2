@@ -1,6 +1,6 @@
 package lime.system;
 
-#if lime_cffi
+#if (!lime_doc_gen || lime_cffi)
 import haxe.io.Path;
 
 import lime._internal.macros.CFFIMacro;
@@ -12,6 +12,9 @@ import sys.io.Process;
 class CFFI
 {
 	@:noCompletion private static var __moduleNames:Map<String, String> = null;
+	#if neko
+	private static var __loadedNekoAPI:Bool;
+	#end
 	public static var available:Bool;
 	public static var enabled:Bool;
 
@@ -82,10 +85,28 @@ class CFFI
 		}
 		else
 		{
+			#if (cpp && (iphone || android || static_link))
+			return cpp.Lib.load(library, method, args);
+			#end
+
 			if (__moduleNames.exists(library))
 			{
 				#if cpp
 				return cpp.Lib.load(__moduleNames.get(library), method, args);
+				#elseif neko
+				#if neko_cffi_trace
+				var result:Dynamic = neko.Lib.load(__moduleNames.get(library), method, args);
+				if (result == null)
+					return null;
+
+				return Reflect.makeVarArgs(function(args)
+				{
+					trace("Called " + library + "@" + method);
+					return Reflect.callMethod(result, result, args);
+				});
+				#else
+				return neko.Lib.load(__moduleNames.get(library), method, args);
+				#end
 				#else
 				return null;
 				#end
@@ -132,6 +153,13 @@ class CFFI
 
 			__loaderTrace("Result : " + result);
 		}
+
+		#if neko
+		if (library == "lime" && method != "neko_init")
+		{
+			__loadNekoAPI(lazy);
+		}
+		#end
 		#end
 		#else
 		result = function(_, _, _, _, _, _)
@@ -197,6 +225,51 @@ class CFFI
 		#end
 	}
 
+	#if neko
+	private static function __loadNekoAPI(lazy:Bool):Void
+	{
+		if (!__loadedNekoAPI)
+		{
+			var init:Dynamic = null;
+			var error:Dynamic = null;
+			try
+			{
+				init = load("lime", "neko_init", 5);
+			}
+			catch (e:Dynamic)
+			{
+				error = e;
+			}
+
+			if (init != null)
+			{
+				__loaderTrace("Found nekoapi @ " + __moduleNames.get("lime"));
+				init(function(s) return new String(s), function(len:Int)
+				{
+					var r = [];
+					if (len > 0)
+						r[len - 1] = null;
+					return r;
+				}, null, true, false);
+
+				__loadedNekoAPI = true;
+			}
+			else if (!lazy)
+			{
+				var ndllFolder = __findNDLLFolder() + __sysName();
+				throw "Could not load lime.ndll. This file is provided with Lime's Haxelib releases, but not via Git. "
+					+ "Please copy it from Lime's latest Haxelib release into either "
+					+ ndllFolder
+					+ " or "
+					+ ndllFolder
+					+ "64, as appropriate for your system. "
+					+ "Advanced users may run `lime rebuild cpp` instead."
+					+ (error != null ? '\nInternal error: $error' : "");
+			}
+		}
+	}
+	#end
+
 	private static function __sysName():String
 	{
 		#if sys
@@ -218,6 +291,8 @@ class CFFI
 		{
 			#if cpp
 			var result = cpp.Lib.load(name, func, args);
+			#elseif (neko)
+			var result = neko.Lib.load(name, func, args);
 			#else
 			var result = null;
 			#end
