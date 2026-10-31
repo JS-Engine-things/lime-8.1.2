@@ -61,7 +61,7 @@ jobs:
           sudo apt update
           sudo apt-get install -y clang-23 lld-23 gcc-12-arm-linux-gnueabihf g++-12-arm-linux-gnueabihf libstdc++-12-dev-armhf-cross libdrm-dev:armhf libgl1-mesa-dev:armhf libglu1-mesa-dev:armhf libpulse-dev:armhf libasound2-dev:armhf libx11-dev:armhf libxext-dev:armhf libxi-dev:armhf libxrandr-dev:armhf libxinerama-dev:armhf libpng-dev:armhf libturbojpeg-dev:armhf libuv1-dev:armhf libvorbis-dev:armhf libdbus-1-dev:armhf libpipewire-0.3-dev:armhf libxcursor-dev:armhf libxss-dev:armhf libudev-dev:armhf libwayland-dev:armhf libxkbcommon-dev:armhf libegl1-mesa-dev:armhf libgles2-mesa-dev:armhf gcc-12 g++-12 libdrm-dev libgl1-mesa-dev libglu1-mesa-dev libpulse-dev libasound2-dev libx11-dev libxext-dev libxi-dev libxrandr-dev libxinerama-dev libpng-dev libturbojpeg-dev libuv1-dev libvorbis-dev libdbus-1-dev libpipewire-0.3-dev libxcursor-dev libxss-dev libudev-dev libwayland-dev libxkbcommon-dev libegl1-mesa-dev libgles2-mesa-dev libjack-dev --no-install-recommends --no-install-suggests
       - name: Setup Haxe
-        uses: krdlab/setup-haxe@master
+        uses: ShadowEngineTeam/setup-haxe@main
         with:
           haxe-version: ${{ env.HAXE_VERSION }}
       - name: Install Haxe dependencies
