@@ -286,30 +286,31 @@ namespace lime {
 
 			switch (event->type)
 			{
-				case SDL_EVENT_DROP_FILE:
+				case SDL_DROPFILE:
 					dropEvent.type = DROP_FILE;
 					break;
-				case SDL_EVENT_DROP_TEXT:
+				case SDL_DROPTEXT:
 					dropEvent.type = DROP_TEXT;
 					break;
-				case SDL_EVENT_DROP_BEGIN:
+				case SDL_DROPBEGIN:
 					dropEvent.type = DROP_BEGIN;
 					break;
-				case SDL_EVENT_DROP_COMPLETE:
+				case SDL_DROPCOMPLETE:
 					dropEvent.type = DROP_COMPLETE;
 					break;
-				case SDL_EVENT_DROP_POSITION:
-					dropEvent.type = DROP_POSITION;
-					break;
+				default:
+					return;
 			}
-
-			dropEvent.x = event->drop.x;
-			dropEvent.y = event->drop.y;
-			dropEvent.data = (char *)event->drop.data;
-			dropEvent.source = (char *)event->drop.source;
+			dropEvent.data = event->drop.file;
 			dropEvent.windowID = event->drop.windowID;
 
 			DropEvent::Dispatch(&dropEvent);
+
+			if (event->drop.file)
+			{
+				SDL_free(event->drop.file);
+				event->drop.file = nullptr;
+			}
 		}
 	}
 
