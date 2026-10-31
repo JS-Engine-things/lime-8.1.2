@@ -36,7 +36,21 @@
 #include <locale>
 #include <codecvt>
 
+#if defined(_MSC_VER) && !defined(__clang__)
+	#pragma warning(push)
+	#pragma warning(disable : 4996)
+#elif defined(__GNUC__) || defined(__clang__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 using wstring_convert = std::wstring_convert<std::codecvt_utf8<wchar_t>>;
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#pragma warning(pop)
+#elif defined(__GNUC__) || defined(__clang__)
+	#pragma GCC diagnostic pop
+#endif
 
 
 namespace lime {
@@ -373,7 +387,7 @@ namespace lime {
 
 	FILE* FILE_HANDLE::getFile () {
 
-		#ifndef HX_WINDOWS
+		#ifdef HX_WINDOWS
 
 		switch (((SDL_RWops*)handle)->type) {
 
