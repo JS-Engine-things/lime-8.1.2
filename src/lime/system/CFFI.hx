@@ -3,6 +3,7 @@ package lime.system;
 #if lime_cffi
 import haxe.io.Path;
 import lime._internal.macros.CFFIMacro;
+#end
 #if !macro
 import sys.io.Process;
 #end
@@ -229,4 +230,3 @@ class CFFI
 		return null;
 	}
 }
-#end
