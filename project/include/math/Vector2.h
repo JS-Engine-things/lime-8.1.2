@@ -1,29 +1,21 @@
-#ifndef LIME_MATH_VECTOR2_H
-#define LIME_MATH_VECTOR2_H
-
+#pragma once
 
 #include <hx/CFFIPrime.h>
 
+namespace lime
+{
 
-namespace lime {
-
-
-	struct Vector2 {
-
+	struct Vector2
+	{
 		double x;
 		double y;
 
-		Vector2 (double x, double y);
-		Vector2 (value vec);
+		Vector2(double x, double y);
+		Vector2(value vec);
 
-		void SetTo (double x, double y);
-		value Value ();
-		value Value (value vec);
-
+		void SetTo(double x, double y);
+		value Value();
+		value Value(value vec);
 	};
 
-
-}
-
-
-#endif
+} // namespace lime
