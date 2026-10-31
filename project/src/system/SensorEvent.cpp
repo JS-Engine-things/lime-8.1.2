@@ -1,4 +1,4 @@
-#include <events/SensorEvent.h>
+#include <system/SensorEvent.h>
 #include <hx/CFFIPrime.h>
 
 namespace lime
