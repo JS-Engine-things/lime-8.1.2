@@ -32,7 +32,6 @@
 #include <ui/KeyEvent.h>
 #include <ui/MouseEvent.h>
 #include <ui/TextEvent.h>
-#include <ui/TouchEvent.h>
 #include <ui/Window.h>
 #include <ui/WindowEvent.h>
 #include <utils/compress/LZMA.h>
@@ -1503,14 +1502,6 @@ namespace lime {
 
 		TextEvent::callback = new ValuePointer (callback);
 		TextEvent::eventObject = new ValuePointer (eventObject);
-
-	}
-
-
-	void lime_touch_event_manager_register (value callback, value eventObject) {
-
-		TouchEvent::callback = new ValuePointer (callback);
-		TouchEvent::eventObject = new ValuePointer (eventObject);
 
 	}
 

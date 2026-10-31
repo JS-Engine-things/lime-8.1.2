@@ -1,7 +1,6 @@
 #include <graphics/PixelFormat.h>
 #include <math/Rectangle.h>
 #include <system/Clipboard.h>
-#include <system/Display.h>
 #include <system/DisplayMode.h>
 #include <system/System.h>
 
@@ -223,62 +222,50 @@ namespace lime {
 	}
 
 
-	void* System::GetDisplay (int id) {
-		if (!init) {
+	void *System::GetDisplay(int id)
+	{
+		if (id == 0)
+			id = SDL_GetPrimaryDisplay();
 
-			id_bounds = val_id ("bounds");
-			id_currentMode = val_id ("currentMode");
-			id_dpi = val_id ("dpi");
-			id_height = val_id ("height");
-			id_name = val_id ("name");
-			id_orientation = val_id ("orientation");
-			id_pixelFormat = val_id ("pixelFormat");
-			id_refreshRate = val_id ("refreshRate");
-			id_supportedModes = val_id ("supportedModes");
-			id_width = val_id ("width");
-			id_safeArea = val_id ("safeArea");
-			init = true;
+		const char *displayName = SDL_GetDisplayName(id);
 
+		if (displayName == NULL)
+		{
+			return alloc_null();
 		}
 
-		int numDisplays = GetNumDisplays ();
+		value display = alloc_empty_object();
+		alloc_field(display, val_id("name"), alloc_string(displayName));
 
-		if (id < 0 || id >= numDisplays) {
+		SDL_Rect bounds = {0, 0, 0, 0};
+		SDL_GetDisplayBounds(id, &bounds);
+		alloc_field(display, val_id("bounds"), Rectangle(bounds.x, bounds.y, bounds.w, bounds.h).Value());
 
-			return alloc_null ();
+		SDL_Rect usable = {0, 0, 0, 0};
+		SDL_GetDisplayUsableBounds(id, &usable);
+		alloc_field(display, val_id("safeArea"), Rectangle(usable.x, usable.y, usable.w, usable.h).Value());
 
+		const SDL_DisplayMode *displayMode = SDL_GetDesktopDisplayMode(id);
+
+		float pixelDensity = displayMode ? displayMode->pixel_density : 1.0f;
+
+		float contentScale = SDL_GetDisplayContentScale(id);
+
+		if (contentScale == 0.0f)
+		{
+			contentScale = 1.0f;
 		}
 
-		value display = alloc_empty_object ();
-		alloc_field (display, id_name, alloc_string (SDL_GetDisplayName (id)));
+		alloc_field(display, val_id("dpi"), alloc_float(dpi));
 
-		SDL_Rect bounds = { 0, 0, 0, 0 };
-		SDL_GetDisplayBounds (id, &bounds);
-		alloc_field (display, id_bounds, Rectangle (bounds.x, bounds.y, bounds.w, bounds.h).Value ());
+		alloc_field(display, val_id("orientation"), alloc_int((int)SDL_GetCurrentDisplayOrientation(id)));
 
-		Rectangle safeAreaInsets;
-		Display::GetSafeAreaInsets(id, &safeAreaInsets);
-		alloc_field (display, id_safeArea,
-			Rectangle (bounds.x + safeAreaInsets.x,
-				bounds.y + safeAreaInsets.y,
-				bounds.w - safeAreaInsets.x - safeAreaInsets.width,
-				bounds.h - safeAreaInsets.y - safeAreaInsets.height).Value ());
-
-		float dpi = 72.0;
-		alloc_field (display, id_dpi, alloc_float (dpi));
-
-		SDL_DisplayOrientation orientation = SDL_GetDisplayOrientation(id);
-		alloc_field (display, id_orientation, alloc_int (orientation));
-
-		SDL_DisplayMode displayMode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
 		DisplayMode mode;
 
-		SDL_GetDesktopDisplayMode (id, &displayMode);
+		mode.height = displayMode->h;
 
-		mode.height = displayMode.h;
-
-		switch (displayMode.format) {
-
+		switch (displayMode->format)
+		{
 			case SDL_PIXELFORMAT_ARGB8888:
 
 				mode.pixelFormat = ARGB32;
@@ -293,25 +280,25 @@ namespace lime {
 			default:
 
 				mode.pixelFormat = RGBA32;
-
 		}
 
-		mode.refreshRate = displayMode.refresh_rate;
-		mode.width = displayMode.w;
+		mode.refreshRate = displayMode->refresh_rate;
+		mode.width = displayMode->w;
 
-		alloc_field (display, id_currentMode, (value)mode.Value ());
+		alloc_field(display, val_id("currentMode"), (value)mode.Value());
 
-		int numDisplayModes = SDL_GetNumDisplayModes (id);
-		value supportedModes = alloc_array (numDisplayModes);
+		int numDisplayModes;
+		SDL_DisplayMode **displayModes = SDL_GetFullscreenDisplayModes(id, &numDisplayModes);
+		value supportedModes = alloc_array(numDisplayModes);
 
-		for (int i = 0; i < numDisplayModes; i++) {
+		for (int i = 0; i < numDisplayModes; i++)
+		{
+			const SDL_DisplayMode *sdlDisplayMode = displayModes[i];
 
-			SDL_GetDisplayMode (id, i, &displayMode);
+			mode.height = sdlDisplayMode->h;
 
-			mode.height = displayMode.h;
-
-			switch (displayMode.format) {
-
+			switch (sdlDisplayMode->format)
+			{
 				case SDL_PIXELFORMAT_ARGB8888:
 
 					mode.pixelFormat = ARGB32;
@@ -326,17 +313,15 @@ namespace lime {
 				default:
 
 					mode.pixelFormat = RGBA32;
-
 			}
 
-			mode.refreshRate = displayMode.refresh_rate;
-			mode.width = displayMode.w;
+			mode.refreshRate = sdlDisplayMode->refresh_rate;
+			mode.width = sdlDisplayMode->w;
 
-			val_array_set_i (supportedModes, i, (value)mode.Value ());
-
+			val_array_set_i(supportedModes, i, (value)mode.Value());
 		}
 
-		alloc_field (display, id_supportedModes, supportedModes);
+		alloc_field(display, val_id("supportedModes"), supportedModes);
 		return display;
 	}
 
