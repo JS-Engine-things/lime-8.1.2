@@ -7,10 +7,6 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
-#ifdef EMSCRIPTEN
-#include "emscripten.h"
-#endif
-
 
 namespace lime {
 
@@ -26,7 +22,7 @@ namespace lime {
 	SDLApplication::SDLApplication () {
 
 		Uint32 initFlags = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_TIMER | SDL_INIT_JOYSTICK;
-		#if defined(LIME_MOJOAL) || defined(LIME_OPENALSOFT)
+		#if defined(LIME_OPENALSOFT)
 		initFlags |= SDL_INIT_AUDIO;
 		#endif
 
@@ -58,7 +54,6 @@ namespace lime {
 		RenderEvent renderEvent;
 		SensorEvent sensorEvent;
 		TextEvent textEvent;
-		TouchEvent touchEvent;
 		WindowEvent windowEvent;
 
 		SDL_EventState (SDL_DROPFILE, SDL_ENABLE);
@@ -91,18 +86,6 @@ namespace lime {
 
 		Init ();
 
-		#ifdef EMSCRIPTEN
-		emscripten_cancel_main_loop ();
-		emscripten_set_main_loop (UpdateFrame, 0, 0);
-		emscripten_set_main_loop_timing (EM_TIMING_RAF, 1);
-		#endif
-
-		#if defined(IPHONE) || defined(EMSCRIPTEN)
-
-		return 0;
-
-		#else
-
 		while (active) {
 
 			Update ();
@@ -111,20 +94,10 @@ namespace lime {
 
 		return Quit ();
 
-		#endif
-
 	}
 
 
 	void SDLApplication::HandleEvent (SDL_Event* event) {
-
-		#if defined(IPHONE) || defined(EMSCRIPTEN)
-
-		int top = 0;
-		gc_set_top_of_stack(&top,false);
-
-		#endif
-
 		switch (event->type) {
 
 			case SDL_USEREVENT:
@@ -164,11 +137,6 @@ namespace lime {
 				break;
 
 			case SDL_APP_DIDENTERFOREGROUND:
-
-				/*#ifdef __ANDROID__
-				SDL_GL_SetSwapInterval(0);
-				#endif*/
-
 				windowEvent.type = WINDOW_ACTIVATE;
 				WindowEvent::Dispatch (&windowEvent);
 
@@ -213,13 +181,6 @@ namespace lime {
 				ProcessDropEvent (event);
 				break;
 
-			case SDL_FINGERMOTION:
-			case SDL_FINGERDOWN:
-			case SDL_FINGERUP:
-
-				ProcessTouchEvent (event);
-				break;
-
 			case SDL_JOYAXISMOTION:
 
 				if (SDLJoystick::IsAccelerometer (event->jaxis.which)) {
@@ -257,19 +218,6 @@ namespace lime {
 
 				ProcessMouseEvent (event);
 				break;
-
-			#ifndef EMSCRIPTEN
-			case SDL_RENDER_DEVICE_RESET:
-
-				renderEvent.type = RENDER_CONTEXT_LOST;
-				RenderEvent::Dispatch (&renderEvent);
-
-				renderEvent.type = RENDER_CONTEXT_RESTORED;
-				RenderEvent::Dispatch (&renderEvent);
-
-				renderEvent.type = RENDER;
-				break;
-			#endif
 
 			case SDL_TEXTINPUT:
 			case SDL_TEXTEDITING:
@@ -747,44 +695,6 @@ namespace lime {
 	}
 
 
-	void SDLApplication::ProcessTouchEvent (SDL_Event* event) {
-
-		if (TouchEvent::callback) {
-
-			switch (event->type) {
-
-				case SDL_FINGERMOTION:
-
-					touchEvent.type = TOUCH_MOVE;
-					break;
-
-				case SDL_FINGERDOWN:
-
-					touchEvent.type = TOUCH_START;
-					break;
-
-				case SDL_FINGERUP:
-
-					touchEvent.type = TOUCH_END;
-					break;
-
-			}
-
-			touchEvent.x = event->tfinger.x;
-			touchEvent.y = event->tfinger.y;
-			touchEvent.id = event->tfinger.fingerId;
-			touchEvent.dx = event->tfinger.dx;
-			touchEvent.dy = event->tfinger.dy;
-			touchEvent.pressure = event->tfinger.pressure;
-			touchEvent.device = event->tfinger.touchId;
-
-			TouchEvent::Dispatch (&touchEvent);
-
-		}
-
-	}
-
-
 	void SDLApplication::ProcessWindowEvent (SDL_Event* event) {
 
 		if (WindowEvent::callback) {
@@ -903,46 +813,13 @@ namespace lime {
 
 		}
 
-
-		#if defined (IPHONE) || defined (EMSCRIPTEN)
-		if (!inBackground) {
-		#endif
-			currentUpdate = SDL_GetPerformanceCounter ();
-	        double deltaTime = (double)(currentUpdate - lastUpdate) / freq;
-		    if (deltaTime < framePeriod) {
-            	Uint64 waitTicks = (Uint64)((framePeriod - deltaTime) * freq);
-            	SDL_Delay((waitTicks * 1000) / freq);
-            	currentUpdate = SDL_GetPerformanceCounter();
-            	deltaTime = (double)(currentUpdate - lastUpdate) / freq;
-        	}
-			lastUpdate = currentUpdate;
-
-			applicationEvent.type = UPDATE;
-			applicationEvent.deltaTime = deltaTime;
-
-			ApplicationEvent::Dispatch (&applicationEvent);
-			RenderEvent::Dispatch (&renderEvent);
-		#if defined (IPHONE) || defined (EMSCRIPTEN)
-		}
-		#endif
-
 		return active;
 
 	}
 
 
 	void SDLApplication::UpdateFrame () {
-
-		#ifdef EMSCRIPTEN
-		System::GCTryExitBlocking ();
-		#endif
-
 		currentApplication->Update ();
-
-		#ifdef EMSCRIPTEN
-		System::GCTryEnterBlocking ();
-		#endif
-
 	}
 
 

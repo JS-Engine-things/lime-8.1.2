@@ -1,5 +1,4 @@
-#ifndef LIME_SDL_WINDOW_H
-#define LIME_SDL_WINDOW_H
+#pragma once
 
 
 #include <SDL.h>
@@ -74,6 +73,3 @@ namespace lime {
 
 
 }
-
-
-#endif
