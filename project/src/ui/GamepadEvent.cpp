@@ -1,4 +1,4 @@
-#include <events/GamepadEvent.h>
+#include <ui/GamepadEvent.h>
 #include <hx/CFFIPrime.h>
 
 namespace lime
