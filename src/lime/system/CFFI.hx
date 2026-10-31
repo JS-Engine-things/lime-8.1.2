@@ -2,9 +2,10 @@ package lime.system;
 
 #if lime_cffi
 import haxe.io.Path;
+
 import lime._internal.macros.CFFIMacro;
-#end
-#if !macro
+
+#if (sys && !macro)
 import sys.io.Process;
 #end
 
@@ -18,7 +19,7 @@ class CFFI
 	{
 		#if lime_cffi
 		available = true;
-		enabled = #if disable_cffi false; #else true; #end
+		enabled = true;
 		#else
 		available = false;
 		enabled = false;
@@ -42,7 +43,7 @@ class CFFI
 	 */
 	public static function load(library:String, method:String, args:Int = 0, lazy:Bool = false):Dynamic
 	{
-		#if disable_cffi || macro
+		#if macro
 		var enabled = false;
 		#end
 
@@ -60,8 +61,10 @@ class CFFI
 
 		var result:Dynamic = null;
 
-		#if (!disable_cffi && !macro)
-		if (__moduleNames == null) __moduleNames = new Map<String, String>();
+		#if !macro
+		#if sys
+		if (__moduleNames == null)
+			__moduleNames = new Map<String, String>();
 
 		if (lazy)
 		{
@@ -69,7 +72,9 @@ class CFFI
 
 			try
 			{
-				#if cpp
+				#if neko
+				result = neko.Lib.loadLazy(library, method, args);
+				#elseif cpp
 				result = cpp.Lib.loadLazy(library, method, args);
 				#end
 			}
@@ -89,7 +94,9 @@ class CFFI
 			__moduleNames.set(library, library);
 
 			var programPath:String = ".";
+			#if sys
 			programPath = Path.directory(Sys.programPath());
+			#end
 
 			result = __tryLoad(programPath + "/" + library, library, method, args);
 
@@ -105,15 +112,20 @@ class CFFI
 
 			if (result == null)
 			{
-				var haxelib = __findHaxelib("lime");
+				var ndllFolder = __findNDLLFolder();
 
-				if (haxelib != "")
+				if (ndllFolder != "")
 				{
-					result = __tryLoad(haxelib + "/ndll/" + __sysName() + "/" + library, library, method, args);
+					result = __tryLoad(ndllFolder + __sysName() + "/" + library, library, method, args);
 
 					if (result == null)
 					{
-						result = __tryLoad(haxelib + "/ndll/" + __sysName() + "64/" + library, library, method, args);
+						result = __tryLoad(ndllFolder + __sysName() + "64/" + library, library, method, args);
+					}
+
+					if (result == null)
+					{
+						result = __tryLoad(ndllFolder + __sysName() + "Arm64/" + library, library, method, args);
 					}
 				}
 			}
@@ -133,7 +145,7 @@ class CFFI
 
 	public static macro function loadPrime(library:String, method:String, signature:String, lazy:Bool = false):Dynamic
 	{
-		#if (!display && !macro && cpp && !disable_cffi)
+		#if (!display && !macro && cpp)
 		return cpp.Prime.load(library, method, signature, lazy);
 		#else
 		var args = signature.length - 1;
@@ -147,39 +159,27 @@ class CFFI
 		#end
 	}
 
-	private static function __findHaxelib(library:String):String
+	private static function __findNDLLFolder():String
 	{
-		#if !macro
+		#if (sys && !macro)
+		var process = new Process("haxelib", ["path", "lime"]);
+
 		try
 		{
-			var proc = new Process("haxelib", ["path", library]);
-
-			if (proc != null)
+			while (true)
 			{
-				var stream = proc.stdout;
+				var line = StringTools.trim(process.stdout.readLine());
 
-				try
+				if (StringTools.startsWith(line, "-L "))
 				{
-					while (true)
-					{
-						var s = stream.readLine();
-
-						if (s.substr(0, 1) != "-")
-						{
-							stream.close();
-							proc.close();
-							__loaderTrace("Found haxelib " + s);
-							return s;
-						}
-					}
+					process.close();
+					return Path.addTrailingSlash(line.substr(3));
 				}
-				catch (e:Dynamic) {}
-
-				stream.close();
-				proc.close();
 			}
 		}
 		catch (e:Dynamic) {}
+
+		process.close();
 		#end
 
 		return "";
@@ -187,26 +187,33 @@ class CFFI
 
 	private static function __loaderTrace(message:String)
 	{
+		#if sys
 		var debug = (Sys.getEnv("OPENFL_LOAD_DEBUG") != null);
 
 		if (debug)
 		{
 			Sys.println(message);
 		}
+		#end
 	}
 
 	private static function __sysName():String
 	{
+		#if sys
 		#if cpp
 		var sys_string = cpp.Lib.load("std", "sys_string", 0);
 		return sys_string();
 		#else
 		return Sys.systemName();
 		#end
+		#else
+		return null;
+		#end
 	}
 
 	private static function __tryLoad(name:String, library:String, func:String, args:Int):Dynamic
 	{
+		#if sys
 		try
 		{
 			#if cpp
@@ -226,7 +233,9 @@ class CFFI
 		{
 			__loaderTrace("Failed to load : " + name);
 		}
+		#end
 
 		return null;
 	}
 }
+#end
