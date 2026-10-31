@@ -1,15 +1,14 @@
-#ifndef LIME_UI_WINDOW_EVENT_H
-#define LIME_UI_WINDOW_EVENT_H
+#pragma once
 
-
-#include <system/ValuePointer.h>
+#include <hx/CFFIPrime.h>
 #include <stdint.h>
+#include <system/ValuePointer.h>
 
+namespace lime
+{
 
-namespace lime {
-
-
-	enum WindowEventType {
+	enum WindowEventType
+	{
 
 		WINDOW_ACTIVATE,
 		WINDOW_CLOSE,
@@ -25,13 +24,13 @@ namespace lime {
 		WINDOW_RESIZE,
 		WINDOW_RESTORE,
 		WINDOW_SHOW,
-		WINDOW_HIDE
+		WINDOW_HIDE,
+		WINDOW_SCALE_CHANGED
 
 	};
 
-
-	struct WindowEvent {
-
+	struct WindowEvent
+	{
 		int height;
 		WindowEventType type;
 		int width;
@@ -39,17 +38,12 @@ namespace lime {
 		int x;
 		int y;
 
-		static ValuePointer* callback;
-		static ValuePointer* eventObject;
+		static ValuePointer *callback;
+		static ValuePointer *eventObject;
 
-		WindowEvent ();
+		WindowEvent();
 
-		static void Dispatch (WindowEvent* event);
-
+		static void Dispatch(WindowEvent *event);
 	};
 
-
-}
-
-
-#endif
+} // namespace lime

@@ -1,40 +1,35 @@
-#ifndef LIME_UI_KEY_EVENT_H
-#define LIME_UI_KEY_EVENT_H
+#pragma once
 
-
-#include <system/ValuePointer.h>
+#include <hx/CFFIPrime.h>
 #include <stdint.h>
+#include <system/ValuePointer.h>
 
+namespace lime
+{
 
-namespace lime {
+	enum TextEventType
+	{
 
-
-	enum KeyEventType {
-
-		KEY_DOWN,
-		KEY_UP
+		TEXT_INPUT,
+		TEXT_EDIT
 
 	};
 
-
-	struct KeyEvent {
-
-		double keyCode;
-		int modifier;
-		KeyEventType type;
+	struct TextEvent
+	{
+		int id;
+		int length;
+		int start;
+		char *text;
+		TextEventType type;
 		int windowID;
 
-		static ValuePointer* callback;
-		static ValuePointer* eventObject;
+		static ValuePointer *callback;
+		static ValuePointer *eventObject;
 
-		KeyEvent ();
+		TextEvent();
 
-		static void Dispatch (KeyEvent* event);
-
+		static void Dispatch(TextEvent *event);
 	};
 
-
-}
-
-
-#endif
+} // namespace lime

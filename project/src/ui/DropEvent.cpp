@@ -1,62 +1,39 @@
-#include <hx/CFFIPrime.h>
 #include <ui/DropEvent.h>
+#include <hx/CFFIPrime.h>
 
+namespace lime
+{
 
-namespace lime {
+	ValuePointer *DropEvent::callback = 0;
+	ValuePointer *DropEvent::eventObject = 0;
 
-
-	ValuePointer* DropEvent::callback = 0;
-	ValuePointer* DropEvent::eventObject = 0;
-
-	static int id_file;
-	static int id_type;
-	static bool init = false;
-
-
-	DropEvent::DropEvent () {
-
-		file = 0;
+	DropEvent::DropEvent()
+	{
+		data = 0;
+		source = 0;
+		windowID = 0;
+		x = 0.0;
+		y = 0.0;
 		type = DROP_FILE;
-
 	}
 
+	void DropEvent::Dispatch(DropEvent *event)
+	{
+		if (DropEvent::callback)
+		{
+			value object = (value)DropEvent::eventObject->Get();
 
-	void DropEvent::Dispatch (DropEvent* event) {
+			alloc_field(object, val_id("type"), alloc_int(event->type));
+			alloc_field(object, val_id("windowID"), alloc_int(event->windowID));
 
-		if (DropEvent::callback) {
+			alloc_field(object, val_id("x"), alloc_float(event->x));
+			alloc_field(object, val_id("y"), alloc_float(event->y));
 
-			if (DropEvent::eventObject->IsCFFIValue ()) {
+			alloc_field(object, val_id("data"), event->data ? alloc_string((const char *)event->data) : alloc_null());
+			alloc_field(object, val_id("source"), event->source ? alloc_string((const char *)event->source) : alloc_null());
 
-				if (!init) {
-
-					id_file = val_id ("file");
-					id_type = val_id ("type");
-					init = true;
-
-				}
-
-				value object = (value)DropEvent::eventObject->Get ();
-
-				alloc_field (object, id_file, alloc_string ((const char*)event->file));
-				alloc_field (object, id_type, alloc_int (event->type));
-
-			} else {
-
-				DropEvent* eventObject = (DropEvent*)DropEvent::eventObject->Get ();
-
-				int length = strlen ((const char*)event->file);
-				char* file = (char*)malloc (length + 1);
-				strcpy (file, (const char*)event->file);
-				eventObject->file = (vbyte*)file;
-				eventObject->type = event->type;
-
-			}
-
-			DropEvent::callback->Call ();
-
+			DropEvent::callback->Call();
 		}
-
 	}
 
-
-}
+} // namespace lime
