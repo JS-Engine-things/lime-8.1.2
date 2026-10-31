@@ -196,7 +196,6 @@
 		</section>
 
 		<file name="src/app/ApplicationEvent.cpp" />
-		<file name="src/graphics/utils/ImageDataUtil.cpp" />
 		<file name="src/graphics/Image.cpp" />
 		<file name="src/graphics/ImageBuffer.cpp" />
 		<file name="src/graphics/RenderEvent.cpp" />

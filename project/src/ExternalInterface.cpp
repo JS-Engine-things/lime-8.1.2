@@ -1096,16 +1096,6 @@ namespace lime {
 	}
 
 
-	void lime_image_data_util_color_transform (value image, value rect, value colorMatrix) {
-
-		Image _image = Image (image);
-		Rectangle _rect = Rectangle (rect);
-		ColorMatrix _colorMatrix = ColorMatrix (colorMatrix);
-		ImageDataUtil::ColorTransform (&_image, &_rect, &_colorMatrix);
-
-	}
-
-
 	void lime_image_data_util_copy_channel (value image, value sourceImage, value sourceRect, value destPoint, int srcChannel, int destChannel) {
 
 		Image _image = Image (image);

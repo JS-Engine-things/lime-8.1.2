@@ -7,29 +7,28 @@
 namespace lime
 {
 
-	enum TextEventType
+	enum KeyEventType
 	{
 
-		TEXT_INPUT,
-		TEXT_EDIT
+		KEY_DOWN,
+		KEY_UP
 
 	};
 
-	struct TextEvent
+	struct KeyEvent
 	{
-		int id;
-		int length;
-		int start;
-		char *text;
-		TextEventType type;
+		double keyCode;
+		int modifier;
+		KeyEventType type;
 		int windowID;
+		double timestamp;
 
 		static ValuePointer *callback;
 		static ValuePointer *eventObject;
 
-		TextEvent();
+		KeyEvent();
 
-		static void Dispatch(TextEvent *event);
+		static void Dispatch(KeyEvent *event);
 	};
 
 } // namespace lime
