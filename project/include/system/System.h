@@ -32,7 +32,7 @@ namespace lime {
 			static std::wstring* GetDeviceModel ();
 			static std::wstring* GetDeviceVendor ();
 			static std::wstring* GetDirectory (SystemDirectory type, const char* company, const char* title);
-			static void* GetDisplay (bool useCFFIValue, int id);
+			static void* GetDisplay (int id);
 			static int GetNumDisplays ();
 			static std::wstring* GetPlatformLabel ();
 			static std::wstring* GetPlatformName ();
