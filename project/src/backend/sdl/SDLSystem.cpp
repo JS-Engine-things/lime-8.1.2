@@ -223,97 +223,103 @@ namespace lime {
 
 	void *System::GetDisplay(int id)
 	{
-		if (id == 0)
-			id = SDL_GetPrimaryDisplay();
+		// SDL2: primary display is always index 0
+		if (id < 0)
+			id = 0;
+
+		int numDisplays = SDL_GetNumVideoDisplays();
+		if (id >= numDisplays)
+			return alloc_null();
 
 		const char *displayName = SDL_GetDisplayName(id);
-
 		if (displayName == NULL)
-		{
 			return alloc_null();
-		}
 
 		value display = alloc_empty_object();
 		alloc_field(display, val_id("name"), alloc_string(displayName));
 
 		SDL_Rect bounds = {0, 0, 0, 0};
 		SDL_GetDisplayBounds(id, &bounds);
-		alloc_field(display, val_id("bounds"), Rectangle(bounds.x, bounds.y, bounds.w, bounds.h).Value());
+		alloc_field(display, val_id("bounds"),
+			Rectangle(bounds.x, bounds.y, bounds.w, bounds.h).Value());
 
 		SDL_Rect usable = {0, 0, 0, 0};
 		SDL_GetDisplayUsableBounds(id, &usable);
-		alloc_field(display, val_id("safeArea"), Rectangle(usable.x, usable.y, usable.w, usable.h).Value());
+		alloc_field(display, val_id("safeArea"),
+			Rectangle(usable.x, usable.y, usable.w, usable.h).Value());
 
-		const SDL_DisplayMode *displayMode = SDL_GetDesktopDisplayMode(id);
+		// Desktop mode (SDL2 fills a struct, does not return a pointer)
+		SDL_DisplayMode desktopMode;
+		bool hasDesktopMode = (SDL_GetDesktopDisplayMode(id, &desktopMode) == 0);
 
-		float pixelDensity = displayMode ? displayMode->pixel_density : 1.0f;
-
-		float contentScale = SDL_GetDisplayContentScale(id);
-
-		if (contentScale == 0.0f)
+		// Approximate content scale / DPI from SDL_GetDisplayDPI
+		float ddpi = 0.0f, hdpi = 0.0f, vdpi = 0.0f;
+		float dpi = 96.0f;
+		if (SDL_GetDisplayDPI(id, &ddpi, &hdpi, &vdpi) == 0 && hdpi > 0.0f)
 		{
-			contentScale = 1.0f;
+			dpi = hdpi;
 		}
-
 		alloc_field(display, val_id("dpi"), alloc_float(dpi));
 
 		DisplayMode mode;
 
-		mode.height = displayMode->h;
-
-		switch (displayMode->format)
+		if (hasDesktopMode)
 		{
-			case SDL_PIXELFORMAT_ARGB8888:
+			mode.height = desktopMode.h;
 
-				mode.pixelFormat = ARGB32;
-				break;
-
-			case SDL_PIXELFORMAT_BGRA8888:
-			case SDL_PIXELFORMAT_BGRX8888:
-
-				mode.pixelFormat = BGRA32;
-				break;
-
-			default:
-
-				mode.pixelFormat = RGBA32;
-		}
-
-		mode.refreshRate = displayMode->refresh_rate;
-		mode.width = displayMode->w;
-
-		alloc_field(display, val_id("currentMode"), (value)mode.Value());
-
-		int numDisplayModes;
-		SDL_DisplayMode **displayModes = SDL_GetFullscreenDisplayModes(id, &numDisplayModes);
-		value supportedModes = alloc_array(numDisplayModes);
-
-		for (int i = 0; i < numDisplayModes; i++)
-		{
-			const SDL_DisplayMode *sdlDisplayMode = displayModes[i];
-
-			mode.height = sdlDisplayMode->h;
-
-			switch (sdlDisplayMode->format)
+			switch (desktopMode.format)
 			{
 				case SDL_PIXELFORMAT_ARGB8888:
-
 					mode.pixelFormat = ARGB32;
 					break;
 
 				case SDL_PIXELFORMAT_BGRA8888:
 				case SDL_PIXELFORMAT_BGRX8888:
-
 					mode.pixelFormat = BGRA32;
 					break;
 
 				default:
-
 					mode.pixelFormat = RGBA32;
 			}
 
-			mode.refreshRate = sdlDisplayMode->refresh_rate;
-			mode.width = sdlDisplayMode->w;
+			mode.refreshRate = desktopMode.refresh_rate;  // int in SDL2
+			mode.width = desktopMode.w;
+
+			alloc_field(display, val_id("currentMode"), (value)mode.Value());
+		}
+
+		// Supported modes: iterate with SDL_GetNumDisplayModes / SDL_GetDisplayMode
+		int numDisplayModes = SDL_GetNumDisplayModes(id);
+		if (numDisplayModes < 0)
+			numDisplayModes = 0;
+
+		value supportedModes = alloc_array(numDisplayModes);
+
+		for (int i = 0; i < numDisplayModes; i++)
+		{
+			SDL_DisplayMode sdlDisplayMode;
+			if (SDL_GetDisplayMode(id, i, &sdlDisplayMode) != 0)
+				continue;
+
+			mode.height = sdlDisplayMode.h;
+
+			switch (sdlDisplayMode.format)
+			{
+				case SDL_PIXELFORMAT_ARGB8888:
+					mode.pixelFormat = ARGB32;
+					break;
+
+				case SDL_PIXELFORMAT_BGRA8888:
+				case SDL_PIXELFORMAT_BGRX8888:
+					mode.pixelFormat = BGRA32;
+					break;
+
+				default:
+					mode.pixelFormat = RGBA32;
+			}
+
+			mode.refreshRate = sdlDisplayMode.refresh_rate;
+			mode.width = sdlDisplayMode.w;
 
 			val_array_set_i(supportedModes, i, (value)mode.Value());
 		}
@@ -321,7 +327,6 @@ namespace lime {
 		alloc_field(display, val_id("supportedModes"), supportedModes);
 		return display;
 	}
-
 
 	int System::GetNumDisplays () {
 
