@@ -2,7 +2,6 @@
 #define LIME_UI_JOYSTICK_EVENT_H
 
 
-#include <system/CFFI.h>
 #include <system/ValuePointer.h>
 
 
@@ -24,7 +23,6 @@ namespace lime {
 
 	struct JoystickEvent {
 
-		hl_type* t;
 		int id;
 		int index;
 		JoystickEventType type;

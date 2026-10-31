@@ -12,7 +12,6 @@ namespace lime {
 
 	struct Image {
 
-		hl_type* t;
 		ImageBuffer* buffer;
 		bool dirty;
 		int height;

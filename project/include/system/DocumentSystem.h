@@ -1,7 +1,6 @@
 #ifndef LIME_SYSTEM_DOCUMENTSYSTEM_H
 #define LIME_SYSTEM_DOCUMENTSYSTEM_H
 
-#include <system/CFFI.h>
 #include <system/JNI.h>
 #include <utils/QuickVec.h>
 #include <utils/Bytes.h>

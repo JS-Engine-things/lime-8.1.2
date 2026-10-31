@@ -2,7 +2,6 @@
 #define LIME_SYSTEM_SENSOR_EVENT_H
 
 
-#include <system/CFFI.h>
 #include <system/ValuePointer.h>
 
 
@@ -17,8 +16,6 @@ namespace lime {
 
 
 	struct SensorEvent {
-
-		hl_type* t;
 		int id;
 		double x;
 		double y;

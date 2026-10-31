@@ -9,7 +9,6 @@
 #include <app/Application.h>
 #include <graphics/ImageBuffer.h>
 #include <math/Rectangle.h>
-#include <system/CFFI.h>
 #include <system/DisplayMode.h>
 #include <stdint.h>
 

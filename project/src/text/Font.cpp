@@ -536,185 +536,80 @@ namespace lime {
 
 		wchar_t* family_name = GetFamilyName ();
 
-		if (useCFFIValue) {
+		value ret = alloc_empty_object ();
+		alloc_field (ret, val_id ("has_kerning"), alloc_bool (FT_HAS_KERNING (((FT_Face)face))));
+		alloc_field (ret, val_id ("is_fixed_width"), alloc_bool (FT_IS_FIXED_WIDTH (((FT_Face)face))));
+		alloc_field (ret, val_id ("has_glyph_names"), alloc_bool (FT_HAS_GLYPH_NAMES (((FT_Face)face))));
+		alloc_field (ret, val_id ("is_italic"), alloc_bool (((FT_Face)face)->style_flags & FT_STYLE_FLAG_ITALIC));
+		alloc_field (ret, val_id ("is_bold"), alloc_bool (((FT_Face)face)->style_flags & FT_STYLE_FLAG_BOLD));
+		alloc_field (ret, val_id ("num_glyphs"), alloc_int (num_glyphs));
+		alloc_field (ret, val_id ("family_name"), family_name == NULL ? alloc_string (((FT_Face)face)->family_name) : alloc_wstring (family_name));
+		alloc_field (ret, val_id ("style_name"), alloc_string (((FT_Face)face)->style_name));
+		alloc_field (ret, val_id ("em_size"), alloc_int (((FT_Face)face)->units_per_EM));
+		alloc_field (ret, val_id ("ascend"), alloc_int (((FT_Face)face)->ascender));
+		alloc_field (ret, val_id ("descend"), alloc_int (((FT_Face)face)->descender));
+		alloc_field (ret, val_id ("height"), alloc_int (((FT_Face)face)->height));
 
-			value ret = alloc_empty_object ();
-			alloc_field (ret, val_id ("has_kerning"), alloc_bool (FT_HAS_KERNING (((FT_Face)face))));
-			alloc_field (ret, val_id ("is_fixed_width"), alloc_bool (FT_IS_FIXED_WIDTH (((FT_Face)face))));
-			alloc_field (ret, val_id ("has_glyph_names"), alloc_bool (FT_HAS_GLYPH_NAMES (((FT_Face)face))));
-			alloc_field (ret, val_id ("is_italic"), alloc_bool (((FT_Face)face)->style_flags & FT_STYLE_FLAG_ITALIC));
-			alloc_field (ret, val_id ("is_bold"), alloc_bool (((FT_Face)face)->style_flags & FT_STYLE_FLAG_BOLD));
-			alloc_field (ret, val_id ("num_glyphs"), alloc_int (num_glyphs));
-			alloc_field (ret, val_id ("family_name"), family_name == NULL ? alloc_string (((FT_Face)face)->family_name) : alloc_wstring (family_name));
-			alloc_field (ret, val_id ("style_name"), alloc_string (((FT_Face)face)->style_name));
-			alloc_field (ret, val_id ("em_size"), alloc_int (((FT_Face)face)->units_per_EM));
-			alloc_field (ret, val_id ("ascend"), alloc_int (((FT_Face)face)->ascender));
-			alloc_field (ret, val_id ("descend"), alloc_int (((FT_Face)face)->descender));
-			alloc_field (ret, val_id ("height"), alloc_int (((FT_Face)face)->height));
+		delete family_name;
 
-			delete family_name;
+		// 'glyphs' field
+		value neko_glyphs = alloc_array (num_glyphs);
+		for (i = 0; i < glyphs.size (); i++) {
 
-			// 'glyphs' field
-			value neko_glyphs = alloc_array (num_glyphs);
-			for (i = 0; i < glyphs.size (); i++) {
+			glyph *g = glyphs[i];
+			int num_points = g->pts.size ();
 
-				glyph *g = glyphs[i];
-				int num_points = g->pts.size ();
+			value points = alloc_array (num_points);
 
-				value points = alloc_array (num_points);
+			for (j = 0; j < num_points; j++) {
 
-				for (j = 0; j < num_points; j++) {
-
-					val_array_set_i (points, j, alloc_int (g->pts[j]));
-
-				}
-
-				value item = alloc_empty_object ();
-				val_array_set_i (neko_glyphs, i, item);
-				alloc_field (item, val_id ("char_code"), alloc_int (g->char_code));
-				alloc_field (item, val_id ("advance"), alloc_int (g->metrics.horiAdvance));
-				alloc_field (item, val_id ("min_x"), alloc_int (g->metrics.horiBearingX));
-				alloc_field (item, val_id ("max_x"), alloc_int (g->metrics.horiBearingX + g->metrics.width));
-				alloc_field (item, val_id ("min_y"), alloc_int (g->metrics.horiBearingY - g->metrics.height));
-				alloc_field (item, val_id ("max_y"), alloc_int (g->metrics.horiBearingY));
-				alloc_field (item, val_id ("points"), points);
-
-				delete g;
+				val_array_set_i (points, j, alloc_int (g->pts[j]));
 
 			}
 
-			alloc_field (ret, val_id ("glyphs"), neko_glyphs);
+			value item = alloc_empty_object ();
+			val_array_set_i (neko_glyphs, i, item);
+			alloc_field (item, val_id ("char_code"), alloc_int (g->char_code));
+			alloc_field (item, val_id ("advance"), alloc_int (g->metrics.horiAdvance));
+			alloc_field (item, val_id ("min_x"), alloc_int (g->metrics.horiBearingX));
+			alloc_field (item, val_id ("max_x"), alloc_int (g->metrics.horiBearingX + g->metrics.width));
+			alloc_field (item, val_id ("min_y"), alloc_int (g->metrics.horiBearingY - g->metrics.height));
+			alloc_field (item, val_id ("max_y"), alloc_int (g->metrics.horiBearingY));
+			alloc_field (item, val_id ("points"), points);
 
-			// 'kerning' field
-			if (FT_HAS_KERNING (((FT_Face)face))) {
+			delete g;
 
-				value neko_kerning = alloc_array (kern.size ());
+		}
 
-				for (i = 0; i < kern.size(); i++) {
+		alloc_field (ret, val_id ("glyphs"), neko_glyphs);
 
-					kerning *k = &kern[i];
+		// 'kerning' field
+		if (FT_HAS_KERNING (((FT_Face)face))) {
 
-					value item = alloc_empty_object();
-					val_array_set_i (neko_kerning,i,item);
-					alloc_field (item, val_id ("left_glyph"), alloc_int (k->l_glyph));
-					alloc_field (item, val_id ("right_glyph"), alloc_int (k->r_glyph));
-					alloc_field (item, val_id ("x"), alloc_int (k->x));
-					alloc_field (item, val_id ("y"), alloc_int (k->y));
+			value neko_kerning = alloc_array (kern.size ());
 
-				}
+			for (i = 0; i < kern.size(); i++) {
 
-				alloc_field (ret, val_id ("kerning"), neko_kerning);
+				kerning *k = &kern[i];
 
-			} else {
-
-				alloc_field (ret, val_id ("kerning"), alloc_null ());
+				value item = alloc_empty_object();
+				val_array_set_i (neko_kerning,i,item);
+				alloc_field (item, val_id ("left_glyph"), alloc_int (k->l_glyph));
+				alloc_field (item, val_id ("right_glyph"), alloc_int (k->r_glyph));
+				alloc_field (item, val_id ("x"), alloc_int (k->x));
+				alloc_field (item, val_id ("y"), alloc_int (k->y));
 
 			}
 
-			return ret;
+			alloc_field (ret, val_id ("kerning"), neko_kerning);
 
 		} else {
 
-			vdynamic* ret = (vdynamic*)hl_alloc_dynobj ();
-			hl_dyn_seti (ret, hl_hash_utf8 ("has_kerning"), &hlt_bool, FT_HAS_KERNING (((FT_Face)face)));
-			hl_dyn_seti (ret, hl_hash_utf8 ("is_fixed_width"), &hlt_bool, FT_IS_FIXED_WIDTH (((FT_Face)face)));
-			hl_dyn_seti (ret, hl_hash_utf8 ("has_glyph_names"), &hlt_bool, FT_HAS_GLYPH_NAMES (((FT_Face)face)));
-			hl_dyn_seti (ret, hl_hash_utf8 ("is_italic"), &hlt_bool, ((FT_Face)face)->style_flags & FT_STYLE_FLAG_ITALIC);
-			hl_dyn_seti (ret, hl_hash_utf8 ("is_bold"), &hlt_bool, ((FT_Face)face)->style_flags & FT_STYLE_FLAG_BOLD);
-			hl_dyn_seti (ret, hl_hash_utf8 ("num_glyphs"), &hlt_i32, num_glyphs);
-
-			char* _family_name = NULL;
-
-			if (family_name != NULL) {
-
-				int length = std::wcslen (family_name);
-				char* result = (char*)malloc (length + 1);
-				std::wcstombs (result, family_name, length);
-				result[length] = '\0';
-				delete family_name;
-
-			} else {
-
-				int length = strlen (((FT_Face)face)->family_name);
-				_family_name = (char*)malloc (length + 1);
-				strcpy (_family_name, ((FT_Face)face)->family_name);
-
-			}
-
-			char* style_name = (char*)malloc(strlen(((FT_Face)face)->style_name) + 1);
-			strcpy(style_name, ((FT_Face)face)->style_name);
-
-			hl_dyn_setp (ret, hl_hash_utf8 ("family_name"), &hlt_bytes, _family_name);
-			hl_dyn_setp (ret, hl_hash_utf8 ("style_name"), &hlt_bytes, style_name);
-			hl_dyn_seti (ret, hl_hash_utf8 ("em_size"), &hlt_i32, ((FT_Face)face)->units_per_EM);
-			hl_dyn_seti (ret, hl_hash_utf8 ("ascend"), &hlt_i32, ((FT_Face)face)->ascender);
-			hl_dyn_seti (ret, hl_hash_utf8 ("descend"), &hlt_i32, ((FT_Face)face)->descender);
-			hl_dyn_seti (ret, hl_hash_utf8 ("height"), &hlt_i32, ((FT_Face)face)->height);
-
-			// 'glyphs' field
-			hl_varray* _glyphs = (hl_varray*)hl_alloc_array (&hlt_dynobj, num_glyphs);
-			vdynamic** _glyphsData = hl_aptr (_glyphs, vdynamic*);
-
-			for (i = 0; i < glyphs.size (); i++) {
-
-				glyph *g = glyphs[i];
-				int num_points = g->pts.size ();
-
-				hl_varray* points = (hl_varray*)hl_alloc_array (&hlt_i32, num_points);
-				int* pointsData = hl_aptr (points, int);
-
-				for (j = 0; j < num_points; j++) {
-
-					*pointsData++ = g->pts[j];
-
-				}
-
-				vdynamic* item = (vdynamic*)hl_alloc_dynobj ();
-				*_glyphsData++ = item;
-				hl_dyn_seti (item, hl_hash_utf8 ("char_code"), &hlt_i32, g->char_code);
-				hl_dyn_seti (item, hl_hash_utf8 ("advance"), &hlt_i32, g->metrics.horiAdvance);
-				hl_dyn_seti (item, hl_hash_utf8 ("min_x"), &hlt_i32, g->metrics.horiBearingX);
-				hl_dyn_seti (item, hl_hash_utf8 ("max_x"), &hlt_i32, g->metrics.horiBearingX + g->metrics.width);
-				hl_dyn_seti (item, hl_hash_utf8 ("min_y"), &hlt_i32, g->metrics.horiBearingY - g->metrics.height);
-				hl_dyn_seti (item, hl_hash_utf8 ("max_y"), &hlt_i32, g->metrics.horiBearingY);
-				hl_dyn_setp (item, hl_hash_utf8 ("points"), &hlt_array, points);
-
-				delete g;
-
-			}
-
-			hl_dyn_setp (ret, hl_hash_utf8 ("glyphs"), &hlt_array, _glyphs);
-
-			// 'kerning' field
-			if (FT_HAS_KERNING (((FT_Face)face))) {
-
-				hl_varray* _kerning = (hl_varray*)hl_alloc_array (&hlt_i32, kern.size ());
-				vdynamic** _kerningData = hl_aptr (_kerning, vdynamic*);
-
-				for (i = 0; i < kern.size(); i++) {
-
-					kerning *k = &kern[i];
-
-					vdynamic* item = (vdynamic*)hl_alloc_dynobj ();
-					*_kerningData++ = item;
-					hl_dyn_seti (item, hl_hash_utf8 ("left_glyph"), &hlt_i32, k->l_glyph);
-					hl_dyn_seti (item, hl_hash_utf8 ("right_glyph"), &hlt_i32, k->r_glyph);
-					hl_dyn_seti (item, hl_hash_utf8 ("x"), &hlt_i32, k->x);
-					hl_dyn_seti (item, hl_hash_utf8 ("y"), &hlt_i32, k->y);
-
-				}
-
-				hl_dyn_setp (ret, hl_hash_utf8 ("kerning"), &hlt_array, _kerning);
-
-			} else {
-
-				hl_dyn_setp (ret, hl_hash_utf8 ("kerning"), &hlt_array, 0);
-
-			}
-
-			return ret;
+			alloc_field (ret, val_id ("kerning"), alloc_null ());
 
 		}
+
+		return ret;
 
 	}
 
@@ -803,108 +698,43 @@ namespace lime {
 
 
 	void* Font::GetGlyphIndices (bool useCFFIValue, const char* characters) {
+		value indices = alloc_array (0);
+		unsigned long character;
+		int index;
 
-		if (useCFFIValue) {
+		while (*characters != 0) {
 
-			value indices = alloc_array (0);
-			unsigned long character;
-			int index;
-
-			while (*characters != 0) {
-
-				character = readNextChar (characters);
-				index = FT_Get_Char_Index ((FT_Face)face, character);
-				val_array_push (indices, alloc_int (index));
-
-			}
-
-			return indices;
-
-		} else {
-
-			unsigned long character;
-			int index;
-			int count = 0;
-
-			// TODO: Determine array size first
-
-			while (*characters != 0) {
-
-				character = readNextChar (characters);
-				count++;
-
-			}
-
-			hl_varray* indices = (hl_varray*)hl_alloc_array (&hlt_i32, count);
-			int* indicesData = hl_aptr (indices, int);
-
-			while (*characters != 0) {
-
-				character = readNextChar (characters);
-				*indicesData++ = FT_Get_Char_Index ((FT_Face)face, character);
-
-			}
-
-			return indices;
+			character = readNextChar (characters);
+			index = FT_Get_Char_Index ((FT_Face)face, character);
+			val_array_push (indices, alloc_int (index));
 
 		}
+
+		return indices;
 
 	}
 
 
 	void* Font::GetGlyphMetrics (bool useCFFIValue, int index) {
+		initialize ();
 
-		if (useCFFIValue) {
+		if (FT_Load_Glyph ((FT_Face)face, index, FT_LOAD_NO_BITMAP | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_DEFAULT) == 0) {
 
-			initialize ();
+			value metrics = alloc_empty_object ();
 
-			if (FT_Load_Glyph ((FT_Face)face, index, FT_LOAD_NO_BITMAP | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_DEFAULT) == 0) {
+			alloc_field (metrics, id_height, alloc_int (((FT_Face)face)->glyph->metrics.height));
+			alloc_field (metrics, id_horizontalBearingX, alloc_int (((FT_Face)face)->glyph->metrics.horiBearingX));
+			alloc_field (metrics, id_horizontalBearingY, alloc_int (((FT_Face)face)->glyph->metrics.horiBearingY));
+			alloc_field (metrics, id_horizontalAdvance, alloc_int (((FT_Face)face)->glyph->metrics.horiAdvance));
+			alloc_field (metrics, id_verticalBearingX, alloc_int (((FT_Face)face)->glyph->metrics.vertBearingX));
+			alloc_field (metrics, id_verticalBearingY, alloc_int (((FT_Face)face)->glyph->metrics.vertBearingY));
+			alloc_field (metrics, id_verticalAdvance, alloc_int (((FT_Face)face)->glyph->metrics.vertAdvance));
 
-				value metrics = alloc_empty_object ();
-
-				alloc_field (metrics, id_height, alloc_int (((FT_Face)face)->glyph->metrics.height));
-				alloc_field (metrics, id_horizontalBearingX, alloc_int (((FT_Face)face)->glyph->metrics.horiBearingX));
-				alloc_field (metrics, id_horizontalBearingY, alloc_int (((FT_Face)face)->glyph->metrics.horiBearingY));
-				alloc_field (metrics, id_horizontalAdvance, alloc_int (((FT_Face)face)->glyph->metrics.horiAdvance));
-				alloc_field (metrics, id_verticalBearingX, alloc_int (((FT_Face)face)->glyph->metrics.vertBearingX));
-				alloc_field (metrics, id_verticalBearingY, alloc_int (((FT_Face)face)->glyph->metrics.vertBearingY));
-				alloc_field (metrics, id_verticalAdvance, alloc_int (((FT_Face)face)->glyph->metrics.vertAdvance));
-
-				return metrics;
-
-			}
-
-			return alloc_null ();
-
-		} else {
-
-			if (FT_Load_Glyph ((FT_Face)face, index, FT_LOAD_NO_BITMAP | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_DEFAULT) == 0) {
-
-				const int id_height = hl_hash_utf8 ("height");
-				const int id_horizontalBearingX = hl_hash_utf8 ("horizontalBearingX");
-				const int id_horizontalBearingY = hl_hash_utf8 ("horizontalBearingY");
-				const int id_horizontalAdvance = hl_hash_utf8 ("horizontalAdvance");
-				const int id_verticalBearingX = hl_hash_utf8 ("verticalBearingX");
-				const int id_verticalBearingY = hl_hash_utf8 ("verticalBearingY");
-				const int id_verticalAdvance = hl_hash_utf8 ("verticalAdvance");
-
-				vdynamic* metrics = (vdynamic*)hl_alloc_dynobj ();
-
-				hl_dyn_seti (metrics, id_height, &hlt_i32, ((FT_Face)face)->glyph->metrics.height);
-				hl_dyn_seti (metrics, id_horizontalBearingX, &hlt_i32, ((FT_Face)face)->glyph->metrics.horiBearingX);
-				hl_dyn_seti (metrics, id_horizontalBearingY, &hlt_i32, ((FT_Face)face)->glyph->metrics.horiBearingY);
-				hl_dyn_seti (metrics, id_horizontalAdvance, &hlt_i32, ((FT_Face)face)->glyph->metrics.horiAdvance);
-				hl_dyn_seti (metrics, id_verticalBearingX, &hlt_i32, ((FT_Face)face)->glyph->metrics.vertBearingX);
-				hl_dyn_seti (metrics, id_verticalBearingY, &hlt_i32, ((FT_Face)face)->glyph->metrics.vertBearingY);
-				hl_dyn_seti (metrics, id_verticalAdvance, &hlt_i32, ((FT_Face)face)->glyph->metrics.vertAdvance);
-
-				return metrics;
-
-			}
-
-			return 0;
+			return metrics;
 
 		}
+
+		return alloc_null ();
 
 	}
 

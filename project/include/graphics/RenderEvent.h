@@ -20,7 +20,6 @@ namespace lime {
 
 	struct RenderEvent {
 
-		hl_type* t;
 		RenderEventType type;
 
 		static ValuePointer* callback;

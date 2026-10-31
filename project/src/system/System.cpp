@@ -12,60 +12,27 @@
 
 namespace lime {
 
-	#ifdef LIME_HASHLINK
-	bool System::_isHL = (hl_nan () != 0);
-	#else
-	bool System::_isHL = false;
-	#endif
-
-
-	void System::GCEnterBlocking () {
-
-		if (!_isHL) {
-
-			gc_enter_blocking ();
-
-		}
-
+	void System::GCEnterBlocking()
+	{
+		gc_enter_blocking();
 	}
 
-
-	void System::GCExitBlocking () {
-
-		if (!_isHL) {
-
-			gc_exit_blocking ();
-
-		}
-
+	void System::GCExitBlocking()
+	{
+		gc_exit_blocking();
 	}
 
-
-	void System::GCTryEnterBlocking () {
-
-		if (!_isHL) {
-
-			// TODO: Only supported in HXCPP 4.3
-			// gc_try_blocking ();
-
-		}
-
+	void System::GCTryEnterBlocking()
+	{
+		gc_try_blocking();
 	}
 
-
-	void System::GCTryExitBlocking () {
-
-		if (!_isHL) {
-
-			// TODO: Only supported in HXCPP 4.3
-			//gc_try_unblocking ();
-
-		}
-
+	void System::GCTryExitBlocking()
+	{
+		gc_try_unblocking();
 	}
 
-
-	#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+	#if defined (HX_WINDOWS)
 	std::wstring* GetWMIValue (BSTR query, BSTR field) {
 
 		HRESULT hres = 0;
@@ -75,23 +42,6 @@ namespace lime {
 		IWbemClassObject *pclsObj = NULL;
 		ULONG uReturn = 0;
 		std::wstring* result = NULL;
-
-		// hres = CoInitializeEx (0, COINIT_MULTITHREADED);
-
-		// if (FAILED (hres)) {
-
-		// 	return NULL;
-
-		// }
-
-		// hres = CoInitializeSecurity (NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
-
-		// if (FAILED (hres)) {
-
-		// 	CoUninitialize ();
-		// 	NULL;
-
-		// }
 
 		#ifdef __MINGW32__
 		static const IID CLSID_WbemLocator = { 0x4590f811, 0x1d3a, 0x11d0,{ 0x89, 0x1f, 0x00, 0xaa, 0x00, 0x4b, 0x2e, 0x24 } };
@@ -167,7 +117,7 @@ namespace lime {
 
 	std::wstring* System::GetDeviceModel () {
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+		#if defined (HX_WINDOWS)
 		return GetWMIValue (bstr_t ("SELECT * FROM Win32_ComputerSystemProduct"), L"Version");
 		#endif
 
@@ -178,7 +128,7 @@ namespace lime {
 
 	std::wstring* System::GetDeviceVendor () {
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+		#if defined (HX_WINDOWS)
 		return GetWMIValue (bstr_t ("SELECT * FROM Win32_ComputerSystemProduct"), L"Vendor");
 		#endif
 
@@ -189,7 +139,7 @@ namespace lime {
 
 	std::wstring* System::GetPlatformLabel () {
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+		#if defined (HX_WINDOWS)
 		return GetWMIValue (bstr_t ("SELECT * FROM Win32_OperatingSystem"), L"Caption");
 		#endif
 
@@ -207,7 +157,7 @@ namespace lime {
 
 	std::wstring* System::GetPlatformVersion () {
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+		#if defined (HX_WINDOWS)
 		return GetWMIValue (bstr_t ("SELECT * FROM Win32_OperatingSystem"), L"Version");
 		#endif
 
@@ -216,7 +166,7 @@ namespace lime {
 	}
 
 
-	#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+	#if defined (HX_WINDOWS)
 	int System::GetWindowsConsoleMode (int handleType) {
 
 		HANDLE handle = GetStdHandle ((DWORD)handleType);
@@ -234,7 +184,7 @@ namespace lime {
 	#endif
 
 
-	#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+	#if defined (HX_WINDOWS)
 	bool System::SetWindowsConsoleMode (int handleType, int mode) {
 
 		HANDLE handle = GetStdHandle ((DWORD)handleType);
@@ -250,6 +200,7 @@ namespace lime {
 	}
 	#endif
 
+	// I feel like this could be used for something else possibly...
 	int System::GetDeviceOrientation () {
 
 		return 0; // SDL_ORIENTATION_UNKNOWN
@@ -261,6 +212,7 @@ namespace lime {
 	}
 
 }
+#endif
 
 
 #ifdef HX_LINUX
@@ -282,146 +234,6 @@ long int __fdelt_chk (long int d) {
 
 	return d / __NFDBITS;
 
-}
-
-#endif
-
-
-#if defined(ANDROID) && !defined(HXCPP_CLANG)
-
-#include <stdint.h>
-#include <wchar.h>
-#include <errno.h>
-
-/*
-* This code was written by Rich Felker in 2010; no copyright is claimed.
-* This code is in the public domain. Attribution is appreciated but
-* unnecessary.
-*/
-
-#define OOB(c,b) (((((b)>>3)-0x10)|(((b)>>3)+((int32_t)(c)>>26))) & ~7)
-
-#define R(a,b) ((uint32_t)((a==0x80 ? 0x40-b : -a) << 23))
-
-#define C(x) ( x<2 ? -1 : ( R(0x80,0xc0) | x ) )
-#define D(x) C((x+16))
-#define E(x) ( ( x==0 ? R(0xa0,0xc0) : \
-				x==0xd ? R(0x80,0xa0) : \
-				R(0x80,0xc0) ) \
-			| ( R(0x80,0xc0) >> 6 ) \
-			| x )
-#define F(x) ( ( x>=5 ? 0 : \
-				x==0 ? R(0x90,0xc0) : \
-				x==4 ? R(0x80,0xa0) : \
-				R(0x80,0xc0) ) \
-			| ( R(0x80,0xc0) >> 6 ) \
-			| ( R(0x80,0xc0) >> 12 ) \
-			| x )
-
-#define SA 0xc2u
-#define SB 0xf4u
-
-const uint32_t bittab[] = {
-				C(0x2),C(0x3),C(0x4),C(0x5),C(0x6),C(0x7),
-	C(0x8),C(0x9),C(0xa),C(0xb),C(0xc),C(0xd),C(0xe),C(0xf),
-	D(0x0),D(0x1),D(0x2),D(0x3),D(0x4),D(0x5),D(0x6),D(0x7),
-	D(0x8),D(0x9),D(0xa),D(0xb),D(0xc),D(0xd),D(0xe),D(0xf),
-	E(0x0),E(0x1),E(0x2),E(0x3),E(0x4),E(0x5),E(0x6),E(0x7),
-	E(0x8),E(0x9),E(0xa),E(0xb),E(0xc),E(0xd),E(0xe),E(0xf),
-	F(0x0),F(0x1),F(0x2),F(0x3),F(0x4)
-};
-
-// Added minor C++ compile fixes
-
-size_t _mbsrtowcs(wchar_t * ws, const char **src, size_t wn, mbstate_t *st)
-{
-	const unsigned char *s = (const unsigned char *)*src;
-	size_t wn0 = wn;
-	unsigned c = 0;
-
-	if (st && (c = *(unsigned *)st)) {
-		if (ws) {
-			*(unsigned *)st = 0;
-			goto resume;
-		} else {
-			goto resume0;
-		}
-	}
-
-	if (!ws) for (;;) {
-		if (*s-1u < 0x7f && (uintptr_t)s%4 == 0) {
-			while (!(( *(uint32_t*)s | *(uint32_t*)s-0x01010101) & 0x80808080)) {
-				s += 4;
-				wn -= 4;
-			}
-		}
-		if (*s-1u < 0x7f) {
-			s++;
-			wn--;
-			continue;
-		}
-		if (*s-SA > SB-SA) break;
-		c = bittab[*s++-SA];
-resume0:
-		if (OOB(c,*s)) { s--; break; }
-		s++;
-		if (c&(1U<<25)) {
-			if (*s-0x80u >= 0x40) { s-=2; break; }
-			s++;
-			if (c&(1U<<19)) {
-				if (*s-0x80u >= 0x40) { s-=3; break; }
-				s++;
-			}
-		}
-		wn--;
-		c = 0;
-	} else for (;;) {
-		if (!wn) {
-			*src = (const char *)s;
-			return wn0;
-		}
-		if (*s-1u < 0x7f && (uintptr_t)s%4 == 0) {
-			while (wn>=5 && !(( *(uint32_t*)s | *(uint32_t*)s-0x01010101) & 0x80808080)) {
-				*ws++ = *s++;
-				*ws++ = *s++;
-				*ws++ = *s++;
-				*ws++ = *s++;
-				wn -= 4;
-			}
-		}
-		if (*s-1u < 0x7f) {
-			*ws++ = *s++;
-			wn--;
-			continue;
-		}
-		if (*s-SA > SB-SA) break;
-		c = bittab[*s++-SA];
-resume:
-		if (OOB(c,*s)) { s--; break; }
-		c = (c<<6) | *s++-0x80;
-		if (c&(1U<<31)) {
-			if (*s-0x80u >= 0x40) { s-=2; break; }
-			c = (c<<6) | *s++-0x80;
-			if (c&(1U<<31)) {
-				if (*s-0x80u >= 0x40) { s-=3; break; }
-				c = (c<<6) | *s++-0x80;
-			}
-		}
-		*ws++ = c;
-		wn--;
-		c = 0;
-	}
-
-	if (!c && !*s) {
-		if (ws) {
-			*ws = 0;
-			*src = 0;
-		}
-		return wn0-wn;
-	}
-	errno = EILSEQ;
-	if (ws) *src = (const char *)s;
-	return -1;
 }
 
 #endif

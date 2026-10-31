@@ -2,7 +2,6 @@
 #define LIME_UI_KEY_EVENT_H
 
 
-#include <system/CFFI.h>
 #include <system/ValuePointer.h>
 #include <stdint.h>
 
@@ -20,7 +19,6 @@ namespace lime {
 
 	struct KeyEvent {
 
-		hl_type* t;
 		double keyCode;
 		int modifier;
 		KeyEventType type;

@@ -10,7 +10,6 @@ namespace lime {
 
 	struct Matrix3 {
 
-		hl_type* t;
 		double a;
 		double b;
 		double c;

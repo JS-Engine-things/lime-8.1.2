@@ -2,7 +2,6 @@
 #define LIME_UI_DROP_EVENT_H
 
 
-#include <system/CFFI.h>
 #include <system/ValuePointer.h>
 
 
@@ -18,7 +17,6 @@ namespace lime {
 
 	struct DropEvent {
 
-		hl_type* t;
 		vbyte* file;
 		DropEventType type;
 

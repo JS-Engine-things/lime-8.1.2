@@ -12,7 +12,6 @@ namespace lime {
 
 	struct ImageBuffer {
 
-		hl_type* t;
 		int bitsPerPixel;
 		ArrayBufferView* data;
 		PixelFormat format;

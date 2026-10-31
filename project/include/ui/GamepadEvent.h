@@ -2,7 +2,6 @@
 #define LIME_UI_GAMEPAD_EVENT_H
 
 
-#include <system/CFFI.h>
 #include <system/ValuePointer.h>
 
 
@@ -22,7 +21,6 @@ namespace lime {
 
 	struct GamepadEvent {
 
-		hl_type* t;
 		int axis;
 		int button;
 		int id;

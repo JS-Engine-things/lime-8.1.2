@@ -2,7 +2,6 @@
 #define LIME_UTILS_BYTES_H
 
 
-#include <system/CFFI.h>
 #include <utils/QuickVec.h>
 
 
@@ -11,7 +10,6 @@ namespace lime {
 
 	struct Bytes {
 
-		hl_type* t;
 		int length;
 		unsigned char* b;
 

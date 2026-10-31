@@ -2,7 +2,6 @@
 #define LIME_UI_TEXT_EVENT_H
 
 
-#include <system/CFFI.h>
 #include <system/ValuePointer.h>
 #include <stdint.h>
 
@@ -20,7 +19,6 @@ namespace lime {
 
 	struct TextEvent {
 
-		hl_type* t;
 		int id;
 		int length;
 		int start;

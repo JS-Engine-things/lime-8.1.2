@@ -31,7 +31,6 @@ namespace lime {
 
 	struct AudioBuffer {
 
-		hl_type* t;
 		int bitsPerSample;
 		int channels;
 		ArrayBufferView* data;

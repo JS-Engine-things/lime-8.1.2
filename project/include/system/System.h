@@ -1,7 +1,6 @@
 #ifndef LIME_SYSTEM_SYSTEM_H
 #define LIME_SYSTEM_SYSTEM_H
 
-#include <system/CFFI.h>
 #include <stdio.h>
 #include <string>
 
@@ -58,11 +57,6 @@ namespace lime {
 			static bool SetWindowsConsoleMode (int handleType, int mode);
 			#endif
 			static void EnableDeviceOrientationChange(bool enable);
-
-		private:
-
-			static bool _isHL;
-
 
 	};
 

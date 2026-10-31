@@ -3,7 +3,6 @@
 #include <system/Clipboard.h>
 #include <system/Display.h>
 #include <system/DisplayMode.h>
-#include <system/JNI.h>
 #include <system/System.h>
 
 #ifdef HX_MACOS
@@ -79,17 +78,6 @@ namespace lime {
 	}
 
 
-	void *JNI::GetEnv () {
-
-		#ifdef ANDROID
-		return SDL_AndroidGetJNIEnv ();
-		#else
-		return 0;
-		#endif
-
-	}
-
-
 	bool System::GetAllowScreenTimeout () {
 
 		return SDL_IsScreenSaverEnabled ();
@@ -125,13 +113,7 @@ namespace lime {
 			}
 
 			case DESKTOP: {
-
-				#if defined (HX_WINRT)
-
-				Windows::Storage::StorageFolder^ folder = Windows::Storage::KnownFolders::HomeGroup;
-				result = new std::wstring (folder->Path->Data ());
-
-				#elif defined (HX_WINDOWS)
+				#if defined (HX_WINDOWS)
 
 				char folderPath[MAX_PATH] = "";
 				SHGetFolderPath (NULL, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, folderPath);
@@ -139,11 +121,7 @@ namespace lime {
 				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 				result = new std::wstring (converter.from_bytes (folderPath));
 
-				#elif defined (IPHONE)
-
-				result = System::GetIOSDirectory (type);
-
-				#elif !defined (ANDROID)
+				#else
 
 				char const* home = getenv ("HOME");
 
@@ -163,27 +141,13 @@ namespace lime {
 			}
 
 			case DOCUMENTS: {
-
-				#if defined (HX_WINRT)
-
-				Windows::Storage::StorageFolder^ folder = Windows::Storage::KnownFolders::DocumentsLibrary;
-				result = new std::wstring (folder->Path->Data ());
-
-				#elif defined (HX_WINDOWS)
+				#if defined (HX_WINDOWS)
 
 				char folderPath[MAX_PATH] = "";
 				SHGetFolderPath (NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, folderPath);
 				//WIN_StringToUTF8 (folderPath);
 				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 				result = new std::wstring (converter.from_bytes (folderPath));
-
-				#elif defined (IPHONE)
-
-				result = System::GetIOSDirectory (type);
-
-				#elif defined (ANDROID)
-
-				result = new std::wstring (L"/mnt/sdcard/Documents");
 
 				#else
 
@@ -204,11 +168,7 @@ namespace lime {
 
 			case FONTS: {
 
-				#if defined (HX_WINRT)
-
-				// TODO
-
-				#elif defined (HX_WINDOWS)
+				#if defined (HX_WINDOWS)
 
 				char folderPath[MAX_PATH] = "";
 				SHGetFolderPath (NULL, CSIDL_FONTS, NULL, SHGFP_TYPE_CURRENT, folderPath);
@@ -220,18 +180,6 @@ namespace lime {
 
 				result = new std::wstring (L"/Library/Fonts");
 
-				#elif defined (IPHONE)
-
-				result = new std::wstring (L"/System/Library/Fonts");
-
-				#elif defined (ANDROID)
-
-				result = new std::wstring (L"/system/fonts");
-
-				#elif defined (BLACKBERRY)
-
-				result = new std::wstring (L"/usr/fonts/font_repository/monotype");
-
 				#else
 
 				result = new std::wstring (L"/usr/share/fonts/truetype");
@@ -242,27 +190,13 @@ namespace lime {
 			}
 
 			case USER: {
-
-				#if defined (HX_WINRT)
-
-				Windows::Storage::StorageFolder^ folder = Windows::Storage::ApplicationData::Current->RoamingFolder;
-				result = new std::wstring (folder->Path->Data ());
-
-				#elif defined (HX_WINDOWS)
+				#if defined (HX_WINDOWS)
 
 				char folderPath[MAX_PATH] = "";
 				SHGetFolderPath (NULL, CSIDL_PROFILE, NULL, SHGFP_TYPE_CURRENT, folderPath);
 				//WIN_StringToUTF8 (folderPath);
 				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 				result = new std::wstring (converter.from_bytes (folderPath));
-
-				#elif defined (IPHONE)
-
-				result = System::GetIOSDirectory (type);
-
-				#elif defined (ANDROID)
-
-				result = new std::wstring (L"/mnt/sdcard");
 
 				#else
 
@@ -289,273 +223,121 @@ namespace lime {
 	}
 
 
-	void* System::GetDisplay (bool useCFFIValue, int id) {
-
-		if (useCFFIValue) {
-
-			if (!init) {
-
-				id_bounds = val_id ("bounds");
-				id_currentMode = val_id ("currentMode");
-				id_dpi = val_id ("dpi");
-				id_height = val_id ("height");
-				id_name = val_id ("name");
-				id_orientation = val_id ("orientation");
-				id_pixelFormat = val_id ("pixelFormat");
-				id_refreshRate = val_id ("refreshRate");
-				id_supportedModes = val_id ("supportedModes");
-				id_width = val_id ("width");
-				id_safeArea = val_id ("safeArea");
-				init = true;
-
-			}
-
-			int numDisplays = GetNumDisplays ();
-
-			if (id < 0 || id >= numDisplays) {
-
-				return alloc_null ();
-
-			}
-
-			value display = alloc_empty_object ();
-			alloc_field (display, id_name, alloc_string (SDL_GetDisplayName (id)));
-
-			SDL_Rect bounds = { 0, 0, 0, 0 };
-			SDL_GetDisplayBounds (id, &bounds);
-			alloc_field (display, id_bounds, Rectangle (bounds.x, bounds.y, bounds.w, bounds.h).Value ());
-
-			Rectangle safeAreaInsets;
-			Display::GetSafeAreaInsets(id, &safeAreaInsets);
-			alloc_field (display, id_safeArea,
-				Rectangle (bounds.x + safeAreaInsets.x,
-					bounds.y + safeAreaInsets.y,
-					bounds.w - safeAreaInsets.x - safeAreaInsets.width,
-					bounds.h - safeAreaInsets.y - safeAreaInsets.height).Value ());
-
-			float dpi = 72.0;
-			#ifndef EMSCRIPTEN
-			SDL_GetDisplayDPI (id, &dpi, NULL, NULL);
-			#endif
-			alloc_field (display, id_dpi, alloc_float (dpi));
-
-			SDL_DisplayOrientation orientation = SDL_GetDisplayOrientation(id);
-			alloc_field (display, id_orientation, alloc_int (orientation));
-
-			SDL_DisplayMode displayMode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
-			DisplayMode mode;
-
-			SDL_GetDesktopDisplayMode (id, &displayMode);
-
-			mode.height = displayMode.h;
-
-			switch (displayMode.format) {
-
-				case SDL_PIXELFORMAT_ARGB8888:
-
-					mode.pixelFormat = ARGB32;
-					break;
-
-				case SDL_PIXELFORMAT_BGRA8888:
-				case SDL_PIXELFORMAT_BGRX8888:
-
-					mode.pixelFormat = BGRA32;
-					break;
-
-				default:
-
-					mode.pixelFormat = RGBA32;
-
-			}
-
-			mode.refreshRate = displayMode.refresh_rate;
-			mode.width = displayMode.w;
-
-			alloc_field (display, id_currentMode, (value)mode.Value ());
-
-			int numDisplayModes = SDL_GetNumDisplayModes (id);
-			value supportedModes = alloc_array (numDisplayModes);
-
-			for (int i = 0; i < numDisplayModes; i++) {
-
-				SDL_GetDisplayMode (id, i, &displayMode);
-
-				mode.height = displayMode.h;
-
-				switch (displayMode.format) {
-
-					case SDL_PIXELFORMAT_ARGB8888:
-
-						mode.pixelFormat = ARGB32;
-						break;
-
-					case SDL_PIXELFORMAT_BGRA8888:
-					case SDL_PIXELFORMAT_BGRX8888:
-
-						mode.pixelFormat = BGRA32;
-						break;
-
-					default:
-
-						mode.pixelFormat = RGBA32;
-
-				}
-
-				mode.refreshRate = displayMode.refresh_rate;
-				mode.width = displayMode.w;
-
-				val_array_set_i (supportedModes, i, (value)mode.Value ());
-
-			}
-
-			alloc_field (display, id_supportedModes, supportedModes);
-			return display;
-
-		} else {
-
-			const int id_bounds = hl_hash_utf8 ("bounds");
-			const int id_currentMode = hl_hash_utf8 ("currentMode");
-			const int id_dpi = hl_hash_utf8 ("dpi");
-			const int id_height = hl_hash_utf8 ("height");
-			const int id_name = hl_hash_utf8 ("name");
-			const int id_orientation = hl_hash_utf8 ("orientation");
-			const int id_pixelFormat = hl_hash_utf8 ("pixelFormat");
-			const int id_refreshRate = hl_hash_utf8 ("refreshRate");
-			const int id_supportedModes = hl_hash_utf8 ("supportedModes");
-			const int id_width = hl_hash_utf8 ("width");
-			const int id_safeArea = hl_hash_utf8 ("safeArea");
-			const int id_x = hl_hash_utf8 ("x");
-			const int id_y = hl_hash_utf8 ("y");
-
-			int numDisplays = GetNumDisplays ();
-
-			if (id < 0 || id >= numDisplays) {
-
-				return 0;
-
-			}
-
-			vdynamic* display = (vdynamic*)hl_alloc_dynobj ();
-
-			const char* displayName = SDL_GetDisplayName (id);
-			char* _displayName = (char*)malloc(strlen(displayName) + 1);
-			strcpy (_displayName, displayName);
-			hl_dyn_setp (display, id_name, &hlt_bytes, _displayName);
-
-			SDL_Rect bounds = { 0, 0, 0, 0 };
-			SDL_GetDisplayBounds (id, &bounds);
-
-			vdynamic* _bounds = (vdynamic*)hl_alloc_dynobj ();
-			hl_dyn_seti (_bounds, id_x, &hlt_i32, bounds.x);
-			hl_dyn_seti (_bounds, id_y, &hlt_i32, bounds.y);
-			hl_dyn_seti (_bounds, id_width, &hlt_i32, bounds.w);
-			hl_dyn_seti (_bounds, id_height, &hlt_i32, bounds.h);
-
-			hl_dyn_setp (display, id_bounds, &hlt_dynobj, _bounds);
-
-			Rectangle safeAreaInsets;
-			Display::GetSafeAreaInsets(id, &safeAreaInsets);
-			vdynamic* _safeArea = (vdynamic*)hl_alloc_dynobj ();
-			hl_dyn_seti (_safeArea, id_x, &hlt_i32, bounds.x + safeAreaInsets.x);
-			hl_dyn_seti (_safeArea, id_y, &hlt_i32, bounds.y + safeAreaInsets.y);
-			hl_dyn_seti (_safeArea, id_width, &hlt_i32, bounds.w - safeAreaInsets.x - safeAreaInsets.width);
-			hl_dyn_seti (_safeArea, id_height, &hlt_i32, bounds.h - safeAreaInsets.y - safeAreaInsets.height);
-
-			hl_dyn_setp (display, id_safeArea, &hlt_dynobj, _safeArea);
-
-			float dpi = 72.0;
-			#ifndef EMSCRIPTEN
-			SDL_GetDisplayDPI (id, &dpi, NULL, NULL);
-			#endif
-			hl_dyn_setf (display, id_dpi, dpi);
-
-			SDL_DisplayOrientation orientation = SDL_GetDisplayOrientation(id);
-			hl_dyn_seti (display, id_orientation, &hlt_i32, orientation);
-
-			SDL_DisplayMode displayMode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
-			DisplayMode mode;
-
-			SDL_GetDesktopDisplayMode (id, &displayMode);
-
-			mode.height = displayMode.h;
-
-			switch (displayMode.format) {
-
-				case SDL_PIXELFORMAT_ARGB8888:
-
-					mode.pixelFormat = ARGB32;
-					break;
-
-				case SDL_PIXELFORMAT_BGRA8888:
-				case SDL_PIXELFORMAT_BGRX8888:
-
-					mode.pixelFormat = BGRA32;
-					break;
-
-				default:
-
-					mode.pixelFormat = RGBA32;
-
-			}
-
-			mode.refreshRate = displayMode.refresh_rate;
-			mode.width = displayMode.w;
-
-			vdynamic* _displayMode = (vdynamic*)hl_alloc_dynobj ();
-			hl_dyn_seti (_displayMode, id_height, &hlt_i32, mode.height);
-			hl_dyn_seti (_displayMode, id_pixelFormat, &hlt_i32, mode.pixelFormat);
-			hl_dyn_seti (_displayMode, id_refreshRate, &hlt_i32, mode.refreshRate);
-			hl_dyn_seti (_displayMode, id_width, &hlt_i32, mode.width);
-			hl_dyn_setp (display, id_currentMode, &hlt_dynobj, _displayMode);
-
-			int numDisplayModes = SDL_GetNumDisplayModes (id);
-
-			hl_varray* supportedModes = (hl_varray*)hl_alloc_array (&hlt_dynobj, numDisplayModes);
-			vdynamic** supportedModesData = hl_aptr (supportedModes, vdynamic*);
-
-			for (int i = 0; i < numDisplayModes; i++) {
-
-				SDL_GetDisplayMode (id, i, &displayMode);
-
-				mode.height = displayMode.h;
-
-				switch (displayMode.format) {
-
-					case SDL_PIXELFORMAT_ARGB8888:
-
-						mode.pixelFormat = ARGB32;
-						break;
-
-					case SDL_PIXELFORMAT_BGRA8888:
-					case SDL_PIXELFORMAT_BGRX8888:
-
-						mode.pixelFormat = BGRA32;
-						break;
-
-					default:
-
-						mode.pixelFormat = RGBA32;
-
-				}
-
-				mode.refreshRate = displayMode.refresh_rate;
-				mode.width = displayMode.w;
-
-				vdynamic* _displayMode = (vdynamic*)hl_alloc_dynobj ();
-				hl_dyn_seti (_displayMode, id_height, &hlt_i32, mode.height);
-				hl_dyn_seti (_displayMode, id_pixelFormat, &hlt_i32, mode.pixelFormat);
-				hl_dyn_seti (_displayMode, id_refreshRate, &hlt_i32, mode.refreshRate);
-				hl_dyn_seti (_displayMode, id_width, &hlt_i32, mode.width);
-
-				*supportedModesData++ = _displayMode;
-
-			}
-
-			hl_dyn_setp (display, id_supportedModes, &hlt_array, supportedModes);
-			return display;
+	void* System::GetDisplay (int id) {
+		if (!init) {
+
+			id_bounds = val_id ("bounds");
+			id_currentMode = val_id ("currentMode");
+			id_dpi = val_id ("dpi");
+			id_height = val_id ("height");
+			id_name = val_id ("name");
+			id_orientation = val_id ("orientation");
+			id_pixelFormat = val_id ("pixelFormat");
+			id_refreshRate = val_id ("refreshRate");
+			id_supportedModes = val_id ("supportedModes");
+			id_width = val_id ("width");
+			id_safeArea = val_id ("safeArea");
+			init = true;
 
 		}
 
+		int numDisplays = GetNumDisplays ();
+
+		if (id < 0 || id >= numDisplays) {
+
+			return alloc_null ();
+
+		}
+
+		value display = alloc_empty_object ();
+		alloc_field (display, id_name, alloc_string (SDL_GetDisplayName (id)));
+
+		SDL_Rect bounds = { 0, 0, 0, 0 };
+		SDL_GetDisplayBounds (id, &bounds);
+		alloc_field (display, id_bounds, Rectangle (bounds.x, bounds.y, bounds.w, bounds.h).Value ());
+
+		Rectangle safeAreaInsets;
+		Display::GetSafeAreaInsets(id, &safeAreaInsets);
+		alloc_field (display, id_safeArea,
+			Rectangle (bounds.x + safeAreaInsets.x,
+				bounds.y + safeAreaInsets.y,
+				bounds.w - safeAreaInsets.x - safeAreaInsets.width,
+				bounds.h - safeAreaInsets.y - safeAreaInsets.height).Value ());
+
+		float dpi = 72.0;
+		alloc_field (display, id_dpi, alloc_float (dpi));
+
+		SDL_DisplayOrientation orientation = SDL_GetDisplayOrientation(id);
+		alloc_field (display, id_orientation, alloc_int (orientation));
+
+		SDL_DisplayMode displayMode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
+		DisplayMode mode;
+
+		SDL_GetDesktopDisplayMode (id, &displayMode);
+
+		mode.height = displayMode.h;
+
+		switch (displayMode.format) {
+
+			case SDL_PIXELFORMAT_ARGB8888:
+
+				mode.pixelFormat = ARGB32;
+				break;
+
+			case SDL_PIXELFORMAT_BGRA8888:
+			case SDL_PIXELFORMAT_BGRX8888:
+
+				mode.pixelFormat = BGRA32;
+				break;
+
+			default:
+
+				mode.pixelFormat = RGBA32;
+
+		}
+
+		mode.refreshRate = displayMode.refresh_rate;
+		mode.width = displayMode.w;
+
+		alloc_field (display, id_currentMode, (value)mode.Value ());
+
+		int numDisplayModes = SDL_GetNumDisplayModes (id);
+		value supportedModes = alloc_array (numDisplayModes);
+
+		for (int i = 0; i < numDisplayModes; i++) {
+
+			SDL_GetDisplayMode (id, i, &displayMode);
+
+			mode.height = displayMode.h;
+
+			switch (displayMode.format) {
+
+				case SDL_PIXELFORMAT_ARGB8888:
+
+					mode.pixelFormat = ARGB32;
+					break;
+
+				case SDL_PIXELFORMAT_BGRA8888:
+				case SDL_PIXELFORMAT_BGRX8888:
+
+					mode.pixelFormat = BGRA32;
+					break;
+
+				default:
+
+					mode.pixelFormat = RGBA32;
+
+			}
+
+			mode.refreshRate = displayMode.refresh_rate;
+			mode.width = displayMode.w;
+
+			val_array_set_i (supportedModes, i, (value)mode.Value ());
+
+		}
+
+		alloc_field (display, id_supportedModes, supportedModes);
+		return display;
 	}
 
 
@@ -634,17 +416,6 @@ namespace lime {
 			case SDL_RWOPS_STDFILE:
 
 				return ((SDL_RWops*)handle)->hidden.stdio.fp;
-
-			case SDL_RWOPS_JNIFILE:
-			{
-				#ifdef ANDROID
-				System::GCEnterBlocking ();
-				FILE* file = ::fdopen (((SDL_RWops*)handle)->hidden.androidio.fd, "rb");
-				::fseek (file, ((SDL_RWops*)handle)->hidden.androidio.offset, 0);
-				System::GCExitBlocking ();
-				return file;
-				#endif
-			}
 
 			case SDL_RWOPS_WINFILE:
 			{

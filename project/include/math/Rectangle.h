@@ -10,7 +10,6 @@ namespace lime {
 
 	struct Rectangle {
 
-		hl_type* t;
 		double height;
 		double width;
 		double x;

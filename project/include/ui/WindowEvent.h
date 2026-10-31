@@ -2,7 +2,6 @@
 #define LIME_UI_WINDOW_EVENT_H
 
 
-#include <system/CFFI.h>
 #include <system/ValuePointer.h>
 #include <stdint.h>
 
@@ -33,7 +32,6 @@ namespace lime {
 
 	struct WindowEvent {
 
-		hl_type* t;
 		int height;
 		WindowEventType type;
 		int width;

@@ -2,7 +2,6 @@
 #define LIME_UI_MOUSE_EVENT_H
 
 
-#include <system/CFFI.h>
 #include <system/ValuePointer.h>
 #include <stdint.h>
 
@@ -22,7 +21,6 @@ namespace lime {
 
 	struct MouseEvent {
 
-		hl_type* t;
 		int button;
 		double movementX;
 		double movementY;

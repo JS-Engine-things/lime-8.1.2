@@ -2,9 +2,6 @@
 #define LIME_SYSTEM_VALUE_POINTER_H
 
 
-#include <system/CFFI.h>
-
-
 namespace lime {
 
 
@@ -28,7 +25,6 @@ namespace lime {
 			void* Call (void* arg0, void* arg1, void* arg2, void* arg3, void* arg4, void* arg5);
 			void* Get () const;
 			bool IsCFFIValue ();
-			bool IsHLValue ();
 			void Set (vobj* handle);
 			void Set (value handle);
 
@@ -36,7 +32,6 @@ namespace lime {
 
 			gcroot cffiRoot;
 			value* cffiValue;
-			vobj* hlValue;
 
 	};
 

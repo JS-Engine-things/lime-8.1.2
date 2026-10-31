@@ -19,7 +19,6 @@ namespace lime {
 
 	struct ApplicationEvent {
 
-		hl_type* t;
 		double deltaTime;
 		ApplicationEventType type;
 
