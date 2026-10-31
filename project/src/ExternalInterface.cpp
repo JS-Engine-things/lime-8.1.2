@@ -126,34 +126,6 @@ namespace lime {
 	}
 
 
-	vbyte* wstring_to_vbytes (std::wstring* val) {
-
-		if (val) {
-
-			#ifdef HX_WINDOWS
-			int size = std::wcslen (val->c_str ());
-			char* result = (char*)malloc (size + 1);
-			std::wcstombs (result, val->c_str (), size);
-			result[size] = '\0';
-			return (vbyte*)result;
-			#else
-			std::string _val = std::string (val->begin (), val->end ());
-			int size = std::strlen (_val.c_str ());
-			char* result = (char*)malloc (size + 1);
-			std::strncpy (result, _val.c_str (), size);
-			result[size] = '\0';
-			return (vbyte*)result;
-			#endif
-
-		} else {
-
-			return 0;
-
-		}
-
-	}
-
-
 	value lime_application_create () {
 
 		Application* application = CreateApplication ();
@@ -1363,7 +1335,7 @@ namespace lime {
 
 	value lime_system_get_display (int id) {
 
-		return (value)System::GetDisplay (true, id);
+		return (value)System::GetDisplay (id);
 
 	}
 
@@ -1531,7 +1503,7 @@ namespace lime {
 
 	value lime_window_context_lock (value window) {
 
-		return (value)((Window*)val_data (window))->ContextLock (true);
+		return (value)((Window*)val_data (window))->ContextLock();
 
 	}
 
@@ -1972,19 +1944,6 @@ namespace lime {
 	DEFINE_PRIME2 (lime_gzip_compress);
 	DEFINE_PRIME2 (lime_gzip_decompress);
 	DEFINE_PRIME2v (lime_haptic_vibrate);
-	DEFINE_PRIME3v (lime_image_data_util_color_transform);
-	DEFINE_PRIME6v (lime_image_data_util_copy_channel);
-	DEFINE_PRIME7v (lime_image_data_util_copy_pixels);
-	DEFINE_PRIME4v (lime_image_data_util_fill_rect);
-	DEFINE_PRIME5v (lime_image_data_util_flood_fill);
-	DEFINE_PRIME4v (lime_image_data_util_get_pixels);
-	DEFINE_PRIME8v (lime_image_data_util_merge);
-	DEFINE_PRIME1v (lime_image_data_util_multiply_alpha);
-	DEFINE_PRIME4v (lime_image_data_util_resize);
-	DEFINE_PRIME2v (lime_image_data_util_set_format);
-	DEFINE_PRIME6v (lime_image_data_util_set_pixels);
-	DEFINE_PRIME12 (lime_image_data_util_threshold);
-	DEFINE_PRIME1v (lime_image_data_util_unmultiply_alpha);
 	DEFINE_PRIME4 (lime_image_encode);
 	DEFINE_PRIME2 (lime_image_load);
 	DEFINE_PRIME2 (lime_image_load_bytes);
@@ -2026,7 +1985,6 @@ namespace lime {
 	DEFINE_PRIME1 (lime_system_set_allow_screen_timeout);
 	DEFINE_PRIME2 (lime_system_set_windows_console_mode);
 	DEFINE_PRIME2v (lime_text_event_manager_register);
-	DEFINE_PRIME2v (lime_touch_event_manager_register);
 	DEFINE_PRIME3v (lime_window_alert);
 	DEFINE_PRIME1v (lime_window_close);
 	DEFINE_PRIME1v (lime_window_context_flip);
@@ -2089,7 +2047,6 @@ namespace lime {
 	#define _TRENDER_EVENT _OBJ (_I32)
 	#define _TSENSOR_EVENT _OBJ (_I32 _F64 _F64 _F64 _I32)
 	#define _TTEXT_EVENT _OBJ (_I32 _I32 _I32 _BYTES _I32 _I32)
-	#define _TTOUCH_EVENT _OBJ (_I32 _F64 _F64 _I32 _F64 _I32 _F64 _F64)
 	#define _TVECTOR2 _OBJ (_F64 _F64)
 	#define _TVORBISFILE _OBJ (_I32 _DYN)
 	#define _TWINDOW_EVENT _OBJ (_I32 _I32 _I32 _I32 _I32 _I32)
