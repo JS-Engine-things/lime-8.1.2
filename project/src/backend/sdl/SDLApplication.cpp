@@ -45,7 +45,6 @@ namespace lime {
 
 		ApplicationEvent applicationEvent;
 		ClipboardEvent clipboardEvent;
-		DropEvent dropEvent;
 		GamepadEvent gamepadEvent;
 		JoystickEvent joystickEvent;
 		KeyEvent keyEvent;
@@ -279,19 +278,41 @@ namespace lime {
 	}
 
 
-	void SDLApplication::ProcessDropEvent (SDL_Event* event) {
+	void SDLApplication::ProcessDropEvent(SDL_Event* event)
+	{
+		if (DropEvent::callback)
+		{
+			DropEvent dropEvent;
 
-		if (DropEvent::callback) {
+			switch (event->type)
+			{
+				case SDL_EVENT_DROP_FILE:
+					dropEvent.type = DROP_FILE;
+					break;
+				case SDL_EVENT_DROP_TEXT:
+					dropEvent.type = DROP_TEXT;
+					break;
+				case SDL_EVENT_DROP_BEGIN:
+					dropEvent.type = DROP_BEGIN;
+					break;
+				case SDL_EVENT_DROP_COMPLETE:
+					dropEvent.type = DROP_COMPLETE;
+					break;
+				case SDL_EVENT_DROP_POSITION:
+					dropEvent.type = DROP_POSITION;
+					break;
+			}
 
-			dropEvent.type = DROP_FILE;
-			dropEvent.file = (vbyte*)event->drop.file;
+			dropEvent.x = event->drop.x;
+			dropEvent.y = event->drop.y;
+			dropEvent.data = (char *)event->drop.data;
+			dropEvent.source = (char *)event->drop.source;
+			dropEvent.windowID = event->drop.windowID;
 
-			DropEvent::Dispatch (&dropEvent);
-			SDL_free (dropEvent.file);
-
+			DropEvent::Dispatch(&dropEvent);
 		}
-
 	}
+
 
 
 	void SDLApplication::ProcessGamepadEvent (SDL_Event* event) {
