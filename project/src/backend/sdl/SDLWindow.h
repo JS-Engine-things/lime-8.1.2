@@ -20,7 +20,7 @@ namespace lime {
 			virtual void Alert (const char* message, const char* title);
 			virtual void Close ();
 			virtual void ContextFlip ();
-			virtual void* ContextLock (bool useCFFIValue);
+			virtual void* ContextLock ();
 			virtual void ContextMakeCurrent ();
 			virtual void ContextUnlock ();
 			virtual void Focus ();
