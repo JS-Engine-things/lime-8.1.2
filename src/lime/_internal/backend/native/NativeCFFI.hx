@@ -608,6 +608,7 @@ class NativeCFFI
 		false));
 	#end
 	#end
+	#end
 
 	#if (lime_cffi && !macro && lime_openal)
 	#if cpp
@@ -1000,6 +1001,7 @@ class NativeCFFI
 	private static var lime_al_auxiv = new cpp.Callable<cpp.Object->Int->cpp.Object->cpp.Void>(cpp.Prime._loadPrime("lime", "lime_al_auxiv", "oiov", false));
 	private static var lime_al_is_aux = new cpp.Callable<cpp.Object->Bool>(cpp.Prime._loadPrime("lime", "lime_al_is_aux", "ob", false));
 	private static var lime_al_remove_send = new cpp.Callable<cpp.Object->Int->cpp.Void>(cpp.Prime._loadPrime("lime", "lime_al_remove_send", "oiv", false));
+	#end
 	#end
 	#end
 
@@ -1443,6 +1445,7 @@ class NativeCFFI
 		false));
 	#end
 	#end
+	#end
 
 	#if (lime_cffi && !macro && lime_curl)
 	#if cpp
@@ -1540,6 +1543,7 @@ class NativeCFFI
 	private static var lime_curl_multi_setopt = new cpp.Callable<cpp.Object->Int->cpp.Object->Int>(cpp.Prime._loadPrime("lime", "lime_curl_multi_setopt",
 		"oioi", false));
 	private static var lime_curl_multi_wait = new cpp.Callable<cpp.Object->Int->Int>(cpp.Prime._loadPrime("lime", "lime_curl_multi_wait", "oii", false));
+	#end
 	#end
 	#end
 
@@ -2537,6 +2541,8 @@ class NativeCFFI
 		false));
 	#end
 	#end
+	#end
+	
 	#if (lime_cffi && !macro && lime_harfbuzz)
 	#if cpp
 	#if disable_cffi
@@ -2944,6 +2950,8 @@ class NativeCFFI
 		false));
 	#end
 	#end
+	#end
+	
 	#if (lime_cffi && !macro && lime_vorbis)
 	#if cpp
 	#if disable_cffi
@@ -3061,6 +3069,7 @@ class NativeCFFI
 		false));
 	private static var lime_vorbis_file_time_total = new cpp.Callable<cpp.Object->Int->Float>(cpp.Prime._loadPrime("lime", "lime_vorbis_file_time_total",
 		"oid", false));
+	#end
 	#end
 	#end
 }
