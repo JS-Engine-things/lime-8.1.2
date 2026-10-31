@@ -1,5 +1,5 @@
 #include <media/codecs/vorbis/VorbisFile.h>
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 #include <system/CFFIPointer.h>
 #include <utils/Bytes.h>
 
