@@ -1,5 +1,5 @@
 #include <math/Vector2.h>
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 #include <system/CFFIPointer.h>
 #include <system/Mutex.h>
 #include <text/Font.h>

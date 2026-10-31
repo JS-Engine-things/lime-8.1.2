@@ -1,5 +1,5 @@
 #include <graphics/RenderEvent.h>
-#include <system/CFFI.h>
+#include <hx/CFFIPrime.h>
 
 
 namespace lime {

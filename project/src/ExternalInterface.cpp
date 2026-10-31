@@ -18,7 +18,6 @@
 #include <system/ClipboardEvent.h>
 #include <system/Endian.h>
 #include <system/FileWatcher.h>
-#include <system/JNI.h>
 #include <system/Locale.h>
 #include <system/OrientationEvent.h>
 #include <system/SensorEvent.h>
@@ -41,7 +40,6 @@
 #include <ui/WindowEvent.h>
 #include <utils/compress/LZMA.h>
 #include <utils/compress/Zlib.h>
-#include <vm/NekoVM.h>
 
 #ifdef HX_WINDOWS
 #include <locale>
@@ -1245,17 +1243,6 @@ namespace lime {
 	}
 
 
-	double lime_jni_getenv () {
-
-		#ifdef ANDROID
-		return (uintptr_t)JNI::GetEnv ();
-		#else
-		return 0;
-		#endif
-
-	}
-
-
 	void lime_joystick_event_manager_register (value callback, value eventObject) {
 
 		JoystickEvent::callback = new ValuePointer (callback);
@@ -1422,15 +1409,6 @@ namespace lime {
 
 		MouseEvent::callback = new ValuePointer (callback);
 		MouseEvent::eventObject = new ValuePointer (eventObject);
-
-	}
-
-
-	void lime_neko_execute (HxString module) {
-
-		#ifdef LIME_NEKO
-		NekoVM::Execute (module.c_str ());
-		#endif
 
 	}
 
@@ -2221,7 +2199,6 @@ namespace lime {
 	DEFINE_PRIME2 (lime_image_load);
 	DEFINE_PRIME2 (lime_image_load_bytes);
 	DEFINE_PRIME2 (lime_image_load_file);
-	DEFINE_PRIME0 (lime_jni_getenv);
 	DEFINE_PRIME2v (lime_joystick_event_manager_register);
 	DEFINE_PRIME1 (lime_joystick_get_device_guid);
 	DEFINE_PRIME1 (lime_joystick_get_device_name);
@@ -2238,7 +2215,6 @@ namespace lime {
 	DEFINE_PRIME2 (lime_lzma_compress);
 	DEFINE_PRIME2 (lime_lzma_decompress);
 	DEFINE_PRIME2v (lime_mouse_event_manager_register);
-	DEFINE_PRIME1v (lime_neko_execute);
 	DEFINE_PRIME2v (lime_orientation_event_manager_register);
 	DEFINE_PRIME3 (lime_png_decode_bytes);
 	DEFINE_PRIME3 (lime_png_decode_file);
