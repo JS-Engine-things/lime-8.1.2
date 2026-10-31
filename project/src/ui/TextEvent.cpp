@@ -1,4 +1,4 @@
-#include <events/TextEvent.h>
+#include <ui/TextEvent.h>
 #include <hx/CFFIPrime.h>
 
 namespace lime
