@@ -17,7 +17,6 @@
 #include <system/ClipboardEvent.h>
 #include <system/Endian.h>
 #include <system/FileWatcher.h>
-#include <system/OrientationEvent.h>
 #include <system/SensorEvent.h>
 #include <system/System.h>
 #include <text/Font.h>
@@ -1246,15 +1245,6 @@ namespace lime {
 	}
 
 
-	void lime_orientation_event_manager_register (value callback, value eventObject) {
-
-		OrientationEvent::callback = new ValuePointer (callback);
-		OrientationEvent::eventObject = new ValuePointer (eventObject);
-		System::EnableDeviceOrientationChange(true);
-
-	}
-
-
 	value lime_png_decode_bytes (value data, bool decodeData, value buffer) {
 
 		ImageBuffer imageBuffer (buffer);
@@ -2023,7 +2013,6 @@ namespace lime {
 	DEFINE_PRIME2 (lime_lzma_compress);
 	DEFINE_PRIME2 (lime_lzma_decompress);
 	DEFINE_PRIME2v (lime_mouse_event_manager_register);
-	DEFINE_PRIME2v (lime_orientation_event_manager_register);
 	DEFINE_PRIME3 (lime_png_decode_bytes);
 	DEFINE_PRIME3 (lime_png_decode_file);
 	DEFINE_PRIME2v (lime_render_event_manager_register);
@@ -2105,7 +2094,6 @@ namespace lime {
 	#define _TJOYSTICK_EVENT _OBJ (_I32 _I32 _I32 _I32 _F64 _F64)
 	#define _TKEY_EVENT _OBJ (_F64 _I32 _I32 _I32)
 	#define _TMOUSE_EVENT _OBJ (_I32 _F64 _F64 _I32 _I32 _F64 _F64 _I32)
-	#define _TORIENTATION_EVENT _OBJ (_I32 _I32 _I32)
 	#define _TRECTANGLE _OBJ (_F64 _F64 _F64 _F64)
 	#define _TRENDER_EVENT _OBJ (_I32)
 	#define _TSENSOR_EVENT _OBJ (_I32 _F64 _F64 _F64 _I32)

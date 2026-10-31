@@ -207,7 +207,6 @@
 		<file name="src/system/CFFIPointer.cpp" />
 		<file name="src/system/ClipboardEvent.cpp" />
 		<file name="src/system/DisplayMode.cpp" />
-		<file name="src/system/OrientationEvent.cpp" />
 		<file name="src/system/SensorEvent.cpp" />
 		<file name="src/system/System.cpp" />
 		<file name="src/system/ValuePointer.cpp" />

@@ -50,7 +50,6 @@ namespace lime {
 		JoystickEvent joystickEvent;
 		KeyEvent keyEvent;
 		MouseEvent mouseEvent;
-		OrientationEvent orientationEvent;
 		RenderEvent renderEvent;
 		SensorEvent sensorEvent;
 		TextEvent textEvent;
@@ -101,27 +100,6 @@ namespace lime {
 		switch (event->type) {
 
 			case SDL_USEREVENT:
-
-				// if (!inBackground) {
-
-				// 	currentUpdate = SDL_GetTicks ();
-				// 	applicationEvent.type = UPDATE;
-				// 	applicationEvent.deltaTime = currentUpdate - lastUpdate;
-				// 	lastUpdate = currentUpdate;
-
-				// 	nextUpdate += framePeriod;
-
-				// 	while (nextUpdate <= currentUpdate) {
-
-				// 		nextUpdate += framePeriod;
-
-				// 	}
-
-				// 	ApplicationEvent::Dispatch (&applicationEvent);
-				// 	RenderEvent::Dispatch (&renderEvent);
-
-				// }
-
 				break;
 
 			case SDL_APP_WILLENTERBACKGROUND:
@@ -133,7 +111,6 @@ namespace lime {
 				break;
 
 			case SDL_APP_WILLENTERFOREGROUND:
-
 				break;
 
 			case SDL_APP_DIDENTERFOREGROUND:
@@ -155,25 +132,6 @@ namespace lime {
 			case SDL_CONTROLLERDEVICEREMOVED:
 
 				ProcessGamepadEvent (event);
-				break;
-
-			case SDL_DISPLAYEVENT:
-
-				switch (event->display.event) {
-
-					case SDL_DISPLAYEVENT_ORIENTATION:
-
-						// this is the orientation of what is rendered, which
-						// may not exactly match the orientation of the device,
-						// if the app was locked to portrait or landscape.
-						orientationEvent.type = DISPLAY_ORIENTATION_CHANGE;
-						orientationEvent.orientation = event->display.data1;
-						orientationEvent.display = event->display.display;
-						OrientationEvent::Dispatch (&orientationEvent);
-
-						break;
-
-				}
 				break;
 
 			case SDL_DROPFILE:

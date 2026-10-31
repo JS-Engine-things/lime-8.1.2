@@ -6,7 +6,6 @@
 #include <app/ApplicationEvent.h>
 #include <graphics/RenderEvent.h>
 #include <system/ClipboardEvent.h>
-#include <system/OrientationEvent.h>
 #include <system/SensorEvent.h>
 #include <ui/DropEvent.h>
 #include <ui/GamepadEvent.h>
@@ -68,7 +67,6 @@ namespace lime {
 			JoystickEvent joystickEvent;
 			KeyEvent keyEvent;
 			MouseEvent mouseEvent;
-			OrientationEvent orientationEvent;
 			RenderEvent renderEvent;
 			SensorEvent sensorEvent;
 			TextEvent textEvent;
