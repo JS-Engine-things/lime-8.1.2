@@ -2,10 +2,6 @@ package lime.system;
 
 import lime.math.Rectangle;
 
-#if !lime_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Display
 {
 	/**
@@ -24,11 +20,6 @@ class Display
 	 * Pixel density of the display
 	 */
 	public var dpi(default, null):Float;
-
-	/**
-	 * Orientation of the display
-	 */
-	public var orientation(default, null):Orientation;
 
 	/**
 	 * The name of the device, such as "Samsung SyncMaster P2350", "iPhone 6", "Oculus Rift DK2", etc.
